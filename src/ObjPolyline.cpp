@@ -121,8 +121,10 @@ void			ObjPolyline::_add_intersectionDots() {
 				pDot2->previousArea = polygon;
 			if (position2 == RelativePosition::Inside && local_isIntersect)
 				pDot2->nextArea = polygon;
-			if (local_isIntersect)
+			if (pDot2->previousArea && pDot2->nextArea)
 				break ;
+			// if (local_isIntersect)
+			// 	break ;
 		}
 		pDot2->isIntersect = local_isIntersect;
 	}

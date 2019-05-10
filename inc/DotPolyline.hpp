@@ -15,6 +15,7 @@ public:
 	DotPolyline(DotPolyline const &ref);
 	~DotPolyline();
 
+	int							id;
 	Dot							dot;
 	std::string					current_time;
 	bool						isIntersect;

@@ -48,6 +48,7 @@ DotPolyline		&DotPolyline::operator=(DotPolyline const & ref) {
 	this->currentArea = ref.currentArea;
 	this->previousArea = ref.previousArea;
 	this->nextArea = ref.nextArea;
+	this->id = ref.id;
 }
 
 
@@ -64,7 +65,6 @@ void			DotPolyline::initLocation(ObjPolygon *mostPossiblePolygon) {
 	Plast				*currentPlast = Plast::getPlast(mostPossiblePolygon);
 	RelativePosition	answer;
 
-	std::cerr << "DotPolyline::initLocation\n";
 	if (!mostPossiblePolygon) {
 		answer = this->initLocation_plast(currentPlast);
 		if (answer == RelativePosition::Outside)
@@ -91,7 +91,6 @@ void			DotPolyline::initLocation(ObjPolygon *mostPossiblePolygon) {
 
 	// check plast
 RelativePosition	DotPolyline::initLocation_plast(Plast *plast) {
-	std::cerr << "DotPolyline::initLocation_plast\n";
 	if (!plast)
 		return RelativePosition::Outside;
 
@@ -102,7 +101,6 @@ RelativePosition	DotPolyline::initLocation_plast(Plast *plast) {
 
 	// check tt_polygons: check self polygon, then check next tt_polygon in right direction
 RelativePosition	DotPolyline::_initLocation_tt_polygons(TetraTreePolygons *tt_polygons) {
-	std::cerr << "DotPolyline::_initLocation_tt_polygons\n";
 	if (!tt_polygons)
 		return RelativePosition::Outside;
 

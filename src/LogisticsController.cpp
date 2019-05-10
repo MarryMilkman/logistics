@@ -35,11 +35,13 @@ LogisticsController	&LogisticsController::getInstance() {
 
 	// init polyline. pars from JSON and init polyline data
 void		LogisticsController::init_polyline(JSON &json) {
+	
 	this->_polyline->free_polyline();
 	this->_polyline->init_formJSON(json);
 
 	this->_polyline->analyze_and_update_data();
-	this->_polyline->showDots();
+	// this->_polyline->showDots();
+	this->_addResult();
 }
 
 
@@ -57,7 +59,8 @@ void		LogisticsController::init_polyline(JSON &json) {
 void				LogisticsController::addPolygon_to_controller_and_db(
 						JSON json_polygon)
 {
-	ObjPolygon					*polygon;
+	std::vector<ObjPolygon *>	parts_of_one_area;
+	// ObjPolygon					*polygon;
 	IntersectionType			answer;
 	std::vector<ObjPolygon *>	conflictPolygons;
 	int							count_arr_dot = json_polygon["coords"].size();
@@ -65,16 +68,23 @@ void				LogisticsController::addPolygon_to_controller_and_db(
 
 	std::cerr << "LogisticsController::addPolygon_to_controller_and_db\n";
 
-	while (++i < count_arr_dot) {
-		polygon = this->_getPolygonIntoJSON(json_polygon, i);
-		std::cerr << "Nex step\n";
+	this->_result = {}; // JSON
+	parts_of_one_area = _getPolygonIntoJSON(json_polygon);
+	for (ObjPolygon * polygon : parts_of_one_area) {
 		conflictPolygons = this->_plast->addNewPolygon_toPlast(polygon, 0, answer);
 		if (conflictPolygons.size()) {
-			this->_addErrorMassage(polygon, conflictPolygons, answer);
+			// change status
+			this->_addResult_error(polygon, conflictPolygons, answer);
 			return ;
 		}
 	}
-	this->_addPolygonTo_db(json_polygon["coords"], polygon);
+	answer = LogisticsController::_checkPartsOfOneArya_and_link_otherParts(parts_of_one_area);
+	if (answer == IntersectionType::ErrorPartsOfOneArya) {
+		this->_addResult_error(0, parts_of_one_area, IntersectionType::ErrorPartsOfOneArya);
+		return ;
+	}
+	this->_addPolygonTo_db(json_polygon["coords"], parts_of_one_area[0]);
+	this->_status = ResultStatus::Polygon_added;
 }
 
 	// load polygons from data base
@@ -86,6 +96,7 @@ void				LogisticsController::reloadPolygonsFrom_db() {
 	std::vector<ObjPolygon *>	conflictPolygons;
 
 	std::cerr << "LogisticsController::reloadPolygonsFrom_db\n";
+	this->_status = ResultStatus::Polygon_added;
 	if (!conn) {
 		std::cerr << "Connect error to db\n";
 		exit(1);
@@ -108,7 +119,7 @@ void				LogisticsController::reloadPolygonsFrom_db() {
 				conflictPolygons = this->_plast->addNewPolygon_toPlast(polygon, 0, answer);
 				if (conflictPolygons.size()) {
 					std::cerr << "ERROR go to error massage\n";
-					this->_addErrorMassage(polygon, conflictPolygons, answer);
+					this->_addResult_error(polygon, conflictPolygons, answer);
 					continue ;
 				}
 				polygon->get_log();
@@ -117,10 +128,12 @@ void				LogisticsController::reloadPolygonsFrom_db() {
 			//
 			answer = LogisticsController::_checkPartsOfOneArya_and_link_otherParts(parts_of_one_area);
 			if (answer == IntersectionType::ErrorPartsOfOneArya)
-				this->_addErrorMassage(0, parts_of_one_area, IntersectionType::ErrorPartsOfOneArya);
+				this->_addResult_error(0, parts_of_one_area, IntersectionType::ErrorPartsOfOneArya);
 		}
 		PQclear(res);
 	}
+	if (this->_status != ResultStatus::Polygon_added)
+		std::cerr << "ERROR in db:\n" << this->_result.dump(2);
 }
 
 	// create new polygon and return it
@@ -145,7 +158,7 @@ std::vector<ObjPolygon *>	LogisticsController::_getPolygon_from_db_PGresult(
 		strJSON = json_db[i].dump();
 		data.arr_dot = this->_get_arr_dot_fromPolygon_string(strJSON); // arr_dot
 		data.color = std::string(PQgetvalue(res, line, 1)); // colot
-		data.id = std::stoi(PQgetvalue(res, line, 2)); // id
+		data.id = std::string(PQgetvalue(res, line, 2)); // id
 		this->_add_max_min_center_XY_toPolygonData(data.arr_dot, data);
 		polygon = new ObjPolygon(data);
 		r_parts.insert(r_parts.end(), polygon);
@@ -171,26 +184,29 @@ void				LogisticsController::_addPolygonTo_db(JSON &json, ObjPolygon *polygon) {
 
 }
 
-	// get ObjPolygon * into json_polygon, with index_arr_dot (json_polygon["coords"][index_arr_dot])
-	// get index_arr_dot part from all parts of arya
-ObjPolygon				*LogisticsController::_getPolygonIntoJSON(JSON &json_polygon, int index_arr_dot) {
-	ObjPolygon			*polygon;
-	t_polygon_data		data;
-	std::string			string_arr;
+	// get std::vector<ObjPolygon *> into json_polygon
+std::vector<ObjPolygon *>		LogisticsController::_getPolygonIntoJSON(JSON &json_polygon) {
+	std::vector<ObjPolygon *>	parts_of_one_area;
+	t_polygon_data				data;
+	std::string					string_arr;
+	int							nbr_parts;
+	int							i = -1;
 
 	std::cerr << "LogisticsController::_getPolygonIntoJSON\n";
-	data.id = std::stoi(json_polygon["name"].get<std::string>()); // id
-	string_arr = json_polygon["coords"][index_arr_dot].dump();
-	data.arr_dot = this->_get_arr_dot_fromPolygon_string(string_arr); // arr_dot
-	this->_add_max_min_center_XY_toPolygonData(data.arr_dot, data); // max min XY center
-	data.color = json_polygon["color"]; // colot
-
-	polygon = new ObjPolygon(data);
-	return polygon;
+	nbr_parts = json_polygon["coords"].size();
+	while (++i < nbr_parts) {
+		data.id = json_polygon["name"].get<std::string>(); // id
+		string_arr = json_polygon["coords"][i].dump();
+		data.arr_dot = this->_get_arr_dot_fromPolygon_string(string_arr); // arr_dot
+		this->_add_max_min_center_XY_toPolygonData(data.arr_dot, data); // max min XY center
+		data.color = json_polygon["color"]; // colot
+		parts_of_one_area.push_back(new ObjPolygon(data));
+	}
+	return parts_of_one_area;
 }
 
 	//connect ro db
-PGconn					*LogisticsController::_connectTo_db() {
+PGconn							*LogisticsController::_connectTo_db() {
 	PGconn	*conn = 0;
 	std::string	user = "postgres";
 	std::string	password = "1234";
@@ -364,17 +380,104 @@ IntersectionType				LogisticsController::_checkPartsOfOneArya_and_link_otherPart
 
 
 
-// MARK: - error hendler
-	//add error massage
-void							LogisticsController::_addErrorMassage(
+// MARK: - result hendler
+
+	//add result of polyline
+void							LogisticsController::_addResult() {
+	JSON	part_result;
+	int		i;
+
+	part_result = {
+		{
+			// coord_x (latitude)
+			// coord_y (longitude)
+			// distance
+			// time
+			// id_dot
+		},
+		{
+			{"location", ""},
+			{"is_intersect", 0},
+			{"next_location", ""}
+		}
+	};
+	i = 0;
+	for (DotPolyline * pDot : this->_polyline->list_pDot) {
+		part_result[0][0] = pDot->dot.x;		// coord_x (latitude)
+		part_result[0][1] = pDot->dot.y;		// coord_y (longitude)
+		part_result[0][2] = pDot->distance;		// distance
+		part_result[0][3] = pDot->current_time;	// time
+		part_result[0][4] = pDot->id;			// id_dot
+
+		part_result[1]["is_intersect"] = pDot->isIntersect ? 1 : 0;
+		if (pDot->isIntersect)
+			part_result[1]["location"] = pDot->previousArea == 0 ? "" : pDot->previousArea->data.id;
+		else
+			part_result[1]["location"] = pDot->listOf_contactAreas[0] == 0 ? "" : pDot->listOf_contactAreas[0]->data.id;
+		part_result[1]["next_location"] = pDot->nextArea == 0 ? "" : pDot->nextArea->data.id;
+		this->_result[i++] = part_result;
+	}
+}
+
+	//add error reuslt
+void							LogisticsController::_addResult_error(
 									ObjPolygon *polygon,
-									std::vector<ObjPolygon *> conflictPolygon,
+									std::vector<ObjPolygon *> conflictPolygons,
 									IntersectionType typeError)
 {
-	std::cerr << "LogisticsController::_addErrorMassage\n";
+	std::cerr << "LogisticsController::_addResult_error\n";
 
-	// if (typeError == IntersectionType::FullMatch)
-	// 	LogisticsController::deletePolygonFrom_db(polygon->data.id);
+	if (typeError == IntersectionType::Intersection_true
+		|| typeError == IntersectionType::FullMatch)
+		this->_addResult_error_intersect_fullMatch(polygon, conflictPolygons);
+	if (typeError == IntersectionType::ErrorPartsOfOneArya)
+		this->_addResult_error_intersect_errorPartsOfOneArya(conflictPolygons);
+	this->_status = ResultStatus::Polygon_intersect;
+}
+
+	// _addResult_error_intersect_fullMatch
+void							LogisticsController::_addResult_error_intersect_fullMatch(
+									ObjPolygon *polygon,
+									std::vector<ObjPolygon *> conflictPolygons)
+{
+	int			i;
+	JSON		part_result = {
+		{"conflict", {""}},
+		{"name", ""}
+	};
+	
+	i = 0;
+	for (ObjPolygon *c_polygon : conflictPolygons) {
+		std::cerr << "sasat" << i << "\n\n";
+		part_result["conflict"][i++] = c_polygon->data.id;
+	}
+	if (polygon)
+		part_result["name"] = polygon->data.id;
+	i = this->_result.size();
+	this->_result[i] = part_result;
+}
+
+	// _addResult_error_intersect_errorPartsOfOneArya
+void							LogisticsController::_addResult_error_intersect_errorPartsOfOneArya(
+									std::vector<ObjPolygon *> parts_of_one_area)
+{
+	int			i;
+	JSON		part_result = {
+		{"parents", {}},
+		{"name", ""}
+	};
+	
+	if (!parts_of_one_area.size())
+		return ;
+	part_result["name"] = parts_of_one_area[0]->data.id;
+	for (ObjPolygon *c_polygon : parts_of_one_area) {
+		if (c_polygon->parent)
+			part_result["parents"][i++] = c_polygon->parent->data.id;
+		else
+			part_result["parents"][i++] = "";
+	}
+	i = this->_result.size();
+	this->_result[i] = part_result;
 }
 
 
@@ -399,7 +502,7 @@ std::string			LogisticsController::_createNewSQL_forAddPolygonInto_db(JSON &json
 	std::string	str = json.dump();
 	values_arr_dot = "\'" + json.dump() + "\', ";
 	values_color = "\'"+ polygon->data.color + "\', ";
-	values_id = "\'" + std::to_string(polygon->data.id) + "\'";
+	values_id = "\'" + polygon->data.id + "\'";
 	r_sql = fits_purt + values_arr_dot + values_color + values_id + ");";
 	polygon->get_log();
 	return r_sql;
@@ -419,6 +522,10 @@ void							LogisticsController::deletePolygonFrom_db(int id) {
 	}
 }
 
+
+
+
+// MARK: - create JSON result
 
 
 
@@ -459,7 +566,6 @@ std::vector<Dot>		LogisticsController::_get_arr_dot_fromPolygon_string(
 
 		arr_dot.insert(arr_dot.end(), dot);
 	}
-	std::cerr << "ok\n";
 	return arr_dot;
 }
 
@@ -509,4 +615,12 @@ void							LogisticsController::showSituationWithPolygons() {
 
 Plast					*LogisticsController::get_plast() {
 	return this->_plast;
+}
+
+ResultStatus			LogisticsController::get_status() {
+	return this->_status;
+}
+
+JSON					LogisticsController::get_result() {
+	return this->_result;
 }

@@ -1,11 +1,11 @@
 #ifndef T_POLYGON_DATA_H
 #define T_POLYGON_DATA_H
 
-#include "lib.h"
+#include "vector"
 #include "geometry/Dot.hpp"
 
-typedef struct				s_polygon_data {
-	int					id;
+typedef struct				t_polygon_data {
+	std::string			id;
 
 	std::vector<Dot>	arr_dot;
 
@@ -17,6 +17,6 @@ typedef struct				s_polygon_data {
 	std::string			color;
 	
 	Dot					center;
-} 							t_polygon_data;
+}							t_polygon_data;
 
 #endif
