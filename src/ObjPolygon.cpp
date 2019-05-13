@@ -3,14 +3,14 @@
 
 ObjPolygon::ObjPolygon(t_polygon_data data) {
 	this->data = data;
-	this->plast = 0;
+	this->plast = new Plast();
 	this->parent = 0;
 	this->data.arr_dot = data.arr_dot;
 }
 
 ObjPolygon::ObjPolygon(t_polygon_data data, ObjPolygon *parentPolygon) {
 	this->data = data;
-	this->plast = 0;
+	this->plast = new Plast();
 	this->parent = parentPolygon;
 	this->data.arr_dot = data.arr_dot;
 }
@@ -100,8 +100,8 @@ ObjPolygon		*ObjPolygon::checkDominationSquare(ObjPolygon *p1, ObjPolygon *p2, b
 	if (max_y_p1 < min_y_p2 || min_y_p1 > max_y_p2)
 		return 0;
 	// get dominant square
-	if (max_y_p1 > max_y_p2 && min_y_p1 < min_y_p2
-		&& max_x_p1 > max_x_p2 && min_x_p1 < min_x_p2)
+	if (max_y_p1 >= max_y_p2 && min_y_p1 <= min_y_p2
+		&& max_x_p1 >= max_x_p2 && min_x_p1 <= min_x_p2)
 		return p1;
 	else
 		return p2;

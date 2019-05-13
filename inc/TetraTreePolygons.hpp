@@ -3,6 +3,7 @@
 
 # include "lib.h"
 
+class Plast;
 
 
 class ObjPolygon;
@@ -23,12 +24,14 @@ public:
 
 	void					addNewPolygon(ObjPolygon *polygon);
 	void					deleteBranches();
+	void					deleteBranches_and_polygon();
 
 	//static functions
 
-	static TetraTreePolygons				*getUpdate_tt_polygons_without(
+	static void								setUpdate_tt_polygons_without(
 												TetraTreePolygons *old_tt_polygons,
-												std::vector<ObjPolygon *> polygons);
+												std::vector<ObjPolygon *> polygons,
+												TetraTreePolygons *new_tt_polygons);
 
 	static bool								is_existence(
 												ObjPolygon *check_polygon,
@@ -54,6 +57,9 @@ public:
 	static bool								is_polygonsEqual(
 												ObjPolygon *p1,
 												ObjPolygon *p2);
+
+	void							show_polygons_and_add_new_plast_to_show(
+										std::vector<Plast *> &list_plast);
 };
 
 #endif

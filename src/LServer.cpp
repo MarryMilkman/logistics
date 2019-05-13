@@ -108,8 +108,10 @@ void		LServer::_startWork() {
 			std::string		response;
 
 			request[result] = 0;
+
+				std::cerr << "Request:\n" << request << "\n\n";
+
 			response = this->_getResponse(std::string(request));
-			std::cerr << response << "\n";
 			result = send(client_socket, response.c_str(), response.size(), 0);
 			if (result == SOCKET_ERROR)
 				std::cerr << "send failed: " << WSAGetLastError() << "\n";
@@ -129,7 +131,6 @@ std::string	LServer::_getResponse(std::string request) {
 
 	body_response = {};
 	json_received = this->_get_json_from_request(request, &type);
-	std::cerr << type << " answer \n";
 	if (type == TypeJSON::tPolyline) {
 		int					i = -1;
 		int					size = json_received.size();
@@ -154,11 +155,10 @@ std::string	LServer::_getResponse(std::string request) {
 		header_response = this->_get_errorHeader();
 	else
 		header_response = this->_get_successHeader(controller.get_status(),
-			body_response.dump().size());
+			body_response.dump(2).size());
 	response = header_response;
-	std::cerr << response << "\n";
 	if (!body_response.empty())
-		response = response + body_response.dump();
+		response = response + body_response.dump(2);
 	return response;
 }
 
@@ -178,10 +178,7 @@ JSON		LServer::_get_json_from_request(std::string request, TypeJSON *type) {
 	try {
 		int		size = parts_request.size();
 
-		std::cerr << "???!\n";
 		r_json = JSON::parse(parts_request[size - 1]);
-		std::cerr << "???!\n";
-		//
 		*type = this->_getType_of_responseJSON(r_json);
 	}
 	catch (std::exception &e) {

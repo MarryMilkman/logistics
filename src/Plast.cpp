@@ -14,7 +14,7 @@ Plast::Plast(TetraTreePolygons *tt_polygons) {
 
 Plast::~Plast() {
 	if (this->_tt_polygons) {
-		this->_tt_polygons->deleteBranches();
+		this->_tt_polygons->deleteBranches_and_polygon();
 		delete this->_tt_polygons;
 	}
 }
@@ -34,8 +34,10 @@ std::vector<ObjPolygon *>	Plast::addNewPolygon_toPlast(
 		this->_update_max_min_coord(polygon);
 		return std::vector<ObjPolygon *>();
 	}
+	if (answer == IntersectionType::PolygonInclude)
+		answer = IntersectionType::Intersection_false;
 	answer_FromCheckIntersection_polygons = LogisticsController::checkIntersection(polygon, this->_tt_polygons, &answer);
-	std::cerr << answer << "A???\n";
+	std::cerr << "Answer: " << answer << "\n";
 	if (answer == IntersectionType::Intersection_false) {
 		this->_tt_polygons->addNewPolygon(polygon);
 		this->_update_max_min_coord(polygon);
@@ -44,21 +46,25 @@ std::vector<ObjPolygon *>	Plast::addNewPolygon_toPlast(
 	if (answer == IntersectionType::PolygonInclude) {
 		Plast	*next_plast = answer_FromCheckIntersection_polygons[0]->plast;
 
-		this->_update_max_min_coord(polygon);
+		// this->_update_max_min_coord(polygon);
+		std::cerr << answer_FromCheckIntersection_polygons[0] << " pam pam PolygonInclude\n";
 		return next_plast->addNewPolygon_toPlast(polygon, answer_FromCheckIntersection_polygons[0], answer);
 	}
 	if (answer == IntersectionType::PolygonUpper) {
-		TetraTreePolygons	*new_tt_polygons = 0;
+		TetraTreePolygons	*new_tt_polygons = new TetraTreePolygons();
 		TetraTreePolygons	*trash_tt_polygon = this->_tt_polygons;
 
-		new_tt_polygons = TetraTreePolygons::getUpdate_tt_polygons_without(this->_tt_polygons, answer_FromCheckIntersection_polygons);
+		TetraTreePolygons::setUpdate_tt_polygons_without(this->_tt_polygons, answer_FromCheckIntersection_polygons, new_tt_polygons);
 		if (parentPolygon)
 			parentPolygon->plast->_tt_polygons = new_tt_polygons;
 		else
 			this->_tt_polygons = new_tt_polygons;
+		for (ObjPolygon *ans_polygon : answer_FromCheckIntersection_polygons)
+			ans_polygon->parent = polygon;
 		trash_tt_polygon->deleteBranches();
 		delete trash_tt_polygon;
 		polygon->plast->_tt_polygons = TetraTreePolygons::createNew_tt_polygons_with(answer_FromCheckIntersection_polygons);
+		this->_tt_polygons->addNewPolygon(polygon);
 		this->_update_max_min_coord(polygon);
 		return std::vector<ObjPolygon *>();
 	}

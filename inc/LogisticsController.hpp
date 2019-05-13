@@ -31,10 +31,12 @@ public:
 
 	void								deletePolygonFrom_db(int id);
 
-	void								showSituationWithPolygons();
+	void								showSituationWithPolygons(std::vector<Plast *> list_plast);
 	Plast								*get_plast();
 	ResultStatus						get_status();
 	JSON								get_result();
+
+	std::vector<ObjPolygon *>			all_polygons;
 
 private:
 	JSON				_result;

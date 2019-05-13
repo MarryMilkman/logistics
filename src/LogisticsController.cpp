@@ -16,6 +16,7 @@ LogisticsController::LogisticsController() {
 }
 
 LogisticsController::~LogisticsController() {
+	std::cerr << "LogisticsController::~LogisticsController()\n";
 	if (this->_polyline)
 		delete this->_polyline;
 	if (this->_plast)
@@ -67,7 +68,7 @@ void				LogisticsController::addPolygon_to_controller_and_db(
 	int							i = -1;
 
 	std::cerr << "LogisticsController::addPolygon_to_controller_and_db\n";
-
+	this->_status = ResultStatus::Polygon_added;
 	this->_result = {}; // JSON
 	parts_of_one_area = _getPolygonIntoJSON(json_polygon);
 	for (ObjPolygon * polygon : parts_of_one_area) {
@@ -75,16 +76,22 @@ void				LogisticsController::addPolygon_to_controller_and_db(
 		if (conflictPolygons.size()) {
 			// change status
 			this->_addResult_error(polygon, conflictPolygons, answer);
-			return ;
+			continue;
 		}
+		this->all_polygons.push_back(polygon);
 	}
 	answer = LogisticsController::_checkPartsOfOneArya_and_link_otherParts(parts_of_one_area);
 	if (answer == IntersectionType::ErrorPartsOfOneArya) {
 		this->_addResult_error(0, parts_of_one_area, IntersectionType::ErrorPartsOfOneArya);
 		return ;
 	}
-	this->_addPolygonTo_db(json_polygon["coords"], parts_of_one_area[0]);
-	this->_status = ResultStatus::Polygon_added;
+	if (this->_status == ResultStatus::Polygon_added) {
+		this->_addPolygonTo_db(json_polygon["coords"], parts_of_one_area[0]);
+		std::vector<Plast *>	v;
+
+		v.push_back(this->_plast);
+		this->showSituationWithPolygons(v);
+	}
 }
 
 	// load polygons from data base
@@ -123,6 +130,7 @@ void				LogisticsController::reloadPolygonsFrom_db() {
 					continue ;
 				}
 				polygon->get_log();
+				this->all_polygons.push_back(polygon);
 				std::cerr << "\n\n\n";
 			}
 			//
@@ -132,6 +140,11 @@ void				LogisticsController::reloadPolygonsFrom_db() {
 		}
 		PQclear(res);
 	}
+	std::cerr << "\n";
+	std::vector<Plast *>	v;
+
+	v.push_back(this->_plast);
+	this->showSituationWithPolygons(v);
 	if (this->_status != ResultStatus::Polygon_added)
 		std::cerr << "ERROR in db:\n" << this->_result.dump(2);
 }
@@ -251,9 +264,8 @@ std::vector<ObjPolygon *>	LogisticsController::checkIntersection(
 		std::cerr << check_polygon 					<< " : " <<  check_polygon->data.id					<< " - check_polygon\n";
 		std::cerr << polygon_from_check_tt_polygon	<< " : " <<  polygon_from_check_tt_polygon->data.id	<< " - polygon_from_check_tt_polygon\n";
 	}
-	*answer = IntersectionType::Intersection_false;
-	//
 	answ_from_intersection = LogisticsController::_intersectionPolygons(check_polygon, polygon_from_check_tt_polygon);
+	std::cerr << answ_from_intersection << "\n";
 	if (answ_from_intersection == IntersectionType::FullMatch) {
 		*answer = answ_from_intersection;
 		std::vector<ObjPolygon *>	r_vector;
@@ -276,6 +288,9 @@ std::vector<ObjPolygon *>	LogisticsController::checkIntersection(
 		*answer = answ_from_intersection;
 		answerPolygons.insert(answerPolygons.end(), polygon_from_check_tt_polygon);
 	}
+	if (*answer != IntersectionType::PolygonUpper && *answer != IntersectionType::Intersection_true
+			&& *answer != IntersectionType::PolygonInclude && *answer != IntersectionType::FullMatch)
+		*answer = answ_from_intersection;
 	// Can be ERROR!
 	sortList_tt_polygons = TetraTreePolygons::createSortListFromChildOf_tt_polygons_withDestination(check_tt_polygon, check_polygon->data.center);
 	int	i;
@@ -343,9 +358,8 @@ IntersectionType		LogisticsController::_intersectionPolygons(
 	ObjPolygon	*dominantPolygon = ObjPolygon::checkDominationSquare(check_polygon, polygon_from_tt, is_equal);
 	if (is_equal)
 		dominantPolygon = check_polygon;
-	if (dominantPolygon != check_polygon) {
+	if (dominantPolygon != check_polygon)
 		return IntersectionType::Intersection_false;
-	}
 	ObjPolygon	*obedientPolygon = polygon_from_tt;
 
 	Dot		dot = obedientPolygon->data.arr_dot[0];
@@ -432,7 +446,17 @@ void							LogisticsController::_addResult_error(
 		this->_addResult_error_intersect_fullMatch(polygon, conflictPolygons);
 	if (typeError == IntersectionType::ErrorPartsOfOneArya)
 		this->_addResult_error_intersect_errorPartsOfOneArya(conflictPolygons);
-	this->_status = ResultStatus::Polygon_intersect;
+	
+	if (this->_status != ResultStatus::Polygon_errorPartsOfOneArya
+			&& this->_status != ResultStatus::Polygon_fullMatch)
+	{
+		if (typeError == IntersectionType::FullMatch)
+			this->_status = ResultStatus::Polygon_fullMatch;
+		else if (typeError == IntersectionType::ErrorPartsOfOneArya)
+			this->_status = ResultStatus::Polygon_errorPartsOfOneArya;
+		else
+			this->_status = ResultStatus::Polygon_intersect;
+	}
 }
 
 	// _addResult_error_intersect_fullMatch
@@ -447,10 +471,8 @@ void							LogisticsController::_addResult_error_intersect_fullMatch(
 	};
 	
 	i = 0;
-	for (ObjPolygon *c_polygon : conflictPolygons) {
-		std::cerr << "sasat" << i << "\n\n";
+	for (ObjPolygon *c_polygon : conflictPolygons)
 		part_result["conflict"][i++] = c_polygon->data.id;
-	}
 	if (polygon)
 		part_result["name"] = polygon->data.id;
 	i = this->_result.size();
@@ -594,25 +616,6 @@ void					LogisticsController::_add_max_min_center_XY_toPolygonData(
 	data.center.y = (data.max_y + data.min_y ) / 2;
 }
 
-	// show some sam info about polygons in controller
-void							LogisticsController::showSituationWithPolygons() {
-	TetraTreePolygons	*tt_polygons;
-
-	if (this->_plast) {
-		std::cerr << "polygons in controller plast:\n";
-		tt_polygons = this->_plast->_tt_polygons;
-		std::cerr << tt_polygons->polygon->data.id << "\n";
-		if (tt_polygons->moreX_lessY)
-			std::cerr << tt_polygons->moreX_lessY->polygon->data.id << " moreX_lessY\n";
-		if (tt_polygons->moreX_moreY)
-			std::cerr << tt_polygons->moreX_moreY->polygon->data.id << " moreX_moreY\n";
-		if (tt_polygons->lessX_moreY)
-			std::cerr << tt_polygons->lessX_moreY->polygon->data.id << " lessX_moreY\n";
-		if (tt_polygons->lessX_lessY)
-			std::cerr << tt_polygons->lessX_lessY->polygon->data.id << " lessX_lessY\n";
-	}
-}
-
 Plast					*LogisticsController::get_plast() {
 	return this->_plast;
 }
@@ -624,3 +627,31 @@ ResultStatus			LogisticsController::get_status() {
 JSON					LogisticsController::get_result() {
 	return this->_result;
 }
+
+	// show some sam info about polygons in controller
+void							LogisticsController::showSituationWithPolygons(
+									std::vector<Plast *> list_plast) {
+	TetraTreePolygons		*tt_polygons;
+	std::vector<Plast *>	new_list_plast;
+
+	if (!list_plast.size())
+		return ;
+	for (Plast * plast : list_plast) {
+		if (!plast)
+			continue;
+		tt_polygons = plast->_tt_polygons;
+		if (!tt_polygons || !tt_polygons->polygon)
+			continue;
+		std::cerr << "PLAST of polygon: ";
+		if (tt_polygons->polygon->parent)
+			std::cerr << tt_polygons->polygon->parent->data.id;
+		else
+			std::cerr << "0";
+		std::cerr << "\n";
+		if (tt_polygons)
+			tt_polygons->show_polygons_and_add_new_plast_to_show(new_list_plast);
+	}
+	LogisticsController::showSituationWithPolygons(new_list_plast);
+
+}
+

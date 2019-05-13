@@ -18,26 +18,25 @@ TetraTreePolygons::TetraTreePolygons(ObjPolygon *polygon) {
 }
 
 TetraTreePolygons::~TetraTreePolygons() {
+	// this->deleteBranches();
 	this->moreX_lessY = 0;
 	this->moreX_moreY = 0;
 	this->lessX_moreY = 0;
 	this->lessX_lessY = 0;
-	if (this->polygon)
-		delete this->polygon;
-	this->deleteBranches();
 }
 
 void			TetraTreePolygons::addNewPolygon(ObjPolygon *polygon) {
+	if (!this->polygon) {
+		this->polygon = polygon;
+		return ;
+	}
+
 	double					polygonX = polygon->data.center.x;
 	double					polygonY = polygon->data.center.y;
 	double					currentX = this->polygon->data.center.x;
 	double					currentY = this->polygon->data.center.y;
 
-	if (!this->polygon) {
-		this->polygon = polygon;
-		return ;
-	}
-	else if (polygonX > currentX && polygonY <= currentY) {
+	if (polygonX > currentX && polygonY <= currentY) {
 		if (this->moreX_lessY)
 			this->moreX_lessY->addNewPolygon(polygon);
 		else
@@ -74,67 +73,35 @@ void			TetraTreePolygons::addNewPolygon(ObjPolygon *polygon) {
 	}
 }
 
-void				TetraTreePolygons::deleteBranches() {
-	if (this->moreX_moreY) {
-		this->moreX_moreY->deleteBranches();
-		delete this->moreX_moreY;
-	}
-	if (this->moreX_lessY) {
-		this->moreX_lessY->deleteBranches();
-		delete this->moreX_lessY;
-	}
-	if (this->lessX_lessY) {
-		this->lessX_lessY->deleteBranches();
-		delete this->lessX_lessY;
-	}
-	if (this->lessX_moreY) {
-		this->lessX_moreY->deleteBranches();
-		delete this->lessX_moreY;
-	}
-}
-
 
 
 
 // MARK: - static functions
 
 	// get new (update) TetraTreePolygons whihout pull of polygons ()
-TetraTreePolygons					*TetraTreePolygons::getUpdate_tt_polygons_without(
+void							TetraTreePolygons::setUpdate_tt_polygons_without(
 										TetraTreePolygons *old_tt_polygons,
-										std::vector<ObjPolygon *> polygons)
+										std::vector<ObjPolygon *> polygons,
+										TetraTreePolygons *new_tt_polygons)
 {
-	TetraTreePolygons	*new_tt_polygons = new TetraTreePolygons();
-	TetraTreePolygons	*tt_polygons;
-	ObjPolygon				*check_polygon;
+
+	ObjPolygon			*check_polygon;
 
 	check_polygon = old_tt_polygons->polygon;
 	if (!TetraTreePolygons::is_existence(check_polygon, polygons))
 		new_tt_polygons->addNewPolygon(check_polygon);
-	tt_polygons = old_tt_polygons;
-	while ((tt_polygons = tt_polygons->moreX_moreY)) {
-		check_polygon = tt_polygons->polygon;
-	if (!TetraTreePolygons::is_existence(check_polygon, polygons))
-			new_tt_polygons->addNewPolygon(check_polygon);
-	}
-	tt_polygons = old_tt_polygons;
-	while ((tt_polygons = tt_polygons->moreX_lessY)) {
-		check_polygon = tt_polygons->polygon;
-	if (!TetraTreePolygons::is_existence(check_polygon, polygons))
-			new_tt_polygons->addNewPolygon(check_polygon);
-	}
-	tt_polygons = old_tt_polygons;
-	while ((tt_polygons = tt_polygons->lessX_lessY)) {
-		check_polygon = tt_polygons->polygon;
-	if (!TetraTreePolygons::is_existence(check_polygon, polygons))
-			new_tt_polygons->addNewPolygon(check_polygon);
-	}
-	tt_polygons = old_tt_polygons;
-	while ((tt_polygons = tt_polygons->lessX_moreY)) {
-		check_polygon = tt_polygons->polygon;
-	if (!TetraTreePolygons::is_existence(check_polygon, polygons))
-			new_tt_polygons->addNewPolygon(check_polygon);
-	}
-	return new_tt_polygons;
+	if (old_tt_polygons->moreX_moreY)
+		TetraTreePolygons::setUpdate_tt_polygons_without(old_tt_polygons->moreX_moreY,
+											polygons, new_tt_polygons);
+	if (old_tt_polygons->moreX_lessY)
+		TetraTreePolygons::setUpdate_tt_polygons_without(old_tt_polygons->moreX_lessY,
+											polygons, new_tt_polygons);
+	if (old_tt_polygons->lessX_lessY)
+		TetraTreePolygons::setUpdate_tt_polygons_without(old_tt_polygons->lessX_lessY,
+											polygons, new_tt_polygons);
+	if (old_tt_polygons->lessX_moreY)
+		TetraTreePolygons::setUpdate_tt_polygons_without(old_tt_polygons->lessX_moreY,
+											polygons, new_tt_polygons);
 }
 
 	// check existence ObjPolygon* is std::vector<ObjPolygon *>
@@ -264,3 +231,76 @@ std::vector<TetraTreePolygons *>	TetraTreePolygons::createSortListFromChildOf_tt
 	return r_list;
 }
 
+
+
+void				TetraTreePolygons::deleteBranches() {
+	if (this->moreX_moreY) {
+		this->moreX_moreY->deleteBranches();
+		delete this->moreX_moreY;
+	}
+	if (this->moreX_lessY) {
+		this->moreX_lessY->deleteBranches();
+		delete this->moreX_lessY;
+	}
+	if (this->lessX_lessY) {
+		this->lessX_lessY->deleteBranches();
+		delete this->lessX_lessY;
+	}
+	if (this->lessX_moreY) {
+		this->lessX_moreY->deleteBranches();
+		delete this->lessX_moreY;
+	}
+}
+
+
+
+void				TetraTreePolygons::deleteBranches_and_polygon() {
+	if (this->polygon)
+		std::cerr << "deleteBranches_and_polygon: " << this->polygon->data.id << "\n"; 
+	if (this->moreX_moreY) {
+		this->moreX_moreY->deleteBranches_and_polygon();
+		delete this->moreX_moreY;
+	}
+	if (this->moreX_lessY) {
+		this->moreX_lessY->deleteBranches_and_polygon();
+		delete this->moreX_lessY;
+	}
+	if (this->lessX_lessY) {
+		this->lessX_lessY->deleteBranches_and_polygon();
+		delete this->lessX_lessY;
+	}
+	if (this->lessX_moreY) {
+		this->lessX_moreY->deleteBranches_and_polygon();
+		delete this->lessX_moreY;
+	}
+	if (this->polygon)
+		delete polygon;
+}
+
+
+
+
+
+	// metod for recursion show of tt_polygons
+	// and init list of plast, that included in showed polygons
+void							TetraTreePolygons::show_polygons_and_add_new_plast_to_show(
+									std::vector<Plast *> &list_plast)
+{
+	if (this->polygon) {
+		std::cerr << this->polygon->data.id << " parent: ";
+		if (this->polygon->parent)
+			std::cerr << this->polygon->parent->data.id << "\n";
+		else
+			std::cerr << "0\n";
+		if (this->polygon->plast)
+			list_plast.push_back(this->polygon->plast);
+	}
+	if (this->moreX_lessY)
+		this->moreX_lessY->show_polygons_and_add_new_plast_to_show(list_plast);
+	if (this->moreX_moreY)
+		this->moreX_moreY->show_polygons_and_add_new_plast_to_show(list_plast);
+	if (this->lessX_moreY)
+		this->lessX_moreY->show_polygons_and_add_new_plast_to_show(list_plast);
+	if (this->lessX_lessY)
+		this->lessX_lessY->show_polygons_and_add_new_plast_to_show(list_plast);
+}

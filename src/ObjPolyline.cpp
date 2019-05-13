@@ -72,7 +72,7 @@ void			ObjPolyline::analyze_and_update_data() {
 void			ObjPolyline::_setLocationOf_poliline_dots() {
 	ObjPolygon					*previousPolygon = 0;
 
-	std::cerr << "ObjPolyline::_init_polyline_data_setLocationOf_poliline_dot\n";
+	std::cerr << "ObjPolyline::_setLocationOf_poliline_dots\n";
 	for (DotPolyline *pDot : this->list_pDot) {
 		pDot->initLocation(previousPolygon);
 		pDot->currentArea = pDot->listOf_contactAreas[0];
@@ -91,7 +91,6 @@ void			ObjPolyline::_add_intersectionDots() {
 		std::vector<Dot>			list_intersect_dot;
 
 		list_intersect_dot = ObjPolyline::get_list_intersect_dots(pDot1, pDot2);
-			// ?
 		this->_add_list_intersect_dot_to_list_pDot_and_initLocate(list_intersect_dot, pDot2->dot, i);
 		size = this->list_pDot.size();
 		i += list_intersect_dot.size();
@@ -148,7 +147,12 @@ void			ObjPolyline::_add_timeAndDistance_for_intersectionDots() {
 
 
 
-// useful function
+// MARK: - useful function
+// 1) _add_list_intersect_dot_to_list_pDot_and_initLocate
+// 2) _sort_list_intersect
+// 3) get_list_intersect_dots (static)
+// 4) _find_intersect
+// 5) showDots
 
 void			ObjPolyline::_add_list_intersect_dot_to_list_pDot_and_initLocate(
 								std::vector<Dot> &list_dot,
@@ -211,6 +215,9 @@ void					ObjPolyline::_find_intersect(
 								Line line,
 								std::vector<Dot> &r_list)
 {
+	if (!tt_polygons)
+		return ;
+
 	ObjPolygon			*check_polygon = tt_polygons->polygon;
 	std::vector<Dot>	new_list_intersectDots;
 	bool				is_exist;
