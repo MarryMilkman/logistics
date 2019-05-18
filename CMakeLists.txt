@@ -3,18 +3,33 @@ cmake_minimum_required(VERSION 3.13.4)
 project(MyProject)
 
 # PostgreSQL
+
 find_package(PostgreSQL REQUIRED)
 
 link_libraries(${PostgreSQL_LIBRARIES})
 
-include_directories(inc json/include ${PostgreSQL_INCLUDE_DIRS})
+
+find_package(Boost REQUIRED)
+
+
+# add_subdirectory(cpp-netlib)
+
+
+include_directories(
+	inc 
+	json/include 
+	${PostgreSQL_INCLUDE_DIRS}
+	${boost_INCLUDE_DIRS}
+)
 
 set(JSON_BuildTests OFF CACHE INTERNAL "")
 
 add_subdirectory(json)
 
 set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -lws2_32")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+
+#-lws2_32
 
 set(SRC
 		src/main.cpp
@@ -33,3 +48,5 @@ set(SRC
 	)
 
 add_executable(log ${SRC})
+
+add_executable(test_client trash/test_client.cpp)

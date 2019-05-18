@@ -26,6 +26,7 @@ ObjPolyline::~ObjPolyline() {
 
 ObjPolyline		&ObjPolyline::operator=(ObjPolyline const & ref) {
 	this->list_pDot = ref.list_pDot;
+	return *this;
 }
 
 	// free data polyline

@@ -109,7 +109,7 @@ void				LogisticsController::reloadPolygonsFrom_db() {
 		exit(1);
 	}
 	PQsendQuery(conn, "SELECT arr_dot, color, id_polygon FROM table_polygons;");
-	while (res = PQgetResult(conn) ) {
+	while ((res = PQgetResult(conn))) {
 		if (PQresultStatus(res) == PGRES_FATAL_ERROR){
 			std::cerr<< PQresultErrorMessage(res)<<std::endl;
 			exit(0);
