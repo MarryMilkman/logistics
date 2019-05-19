@@ -1,0 +1,7 @@
+{
+	"user": "iseletsk",
+	"password": "",
+	"host": "localhost",
+	"dbname": "polygons",
+	"port": 5432
+}

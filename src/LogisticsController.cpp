@@ -60,6 +60,7 @@ void		LogisticsController::init_polyline(JSON &json) {
 void				LogisticsController::addPolygon_to_controller_and_db(
 						JSON json_polygon)
 {
+	system("leaks log");
 	std::vector<ObjPolygon *>	parts_of_one_area;
 	// ObjPolygon					*polygon;
 	IntersectionType			answer;
@@ -108,10 +109,11 @@ void				LogisticsController::reloadPolygonsFrom_db() {
 		std::cerr << "Connect error to db\n";
 		exit(1);
 	}
+	// this->_create_new_table(conn);
 	PQsendQuery(conn, "SELECT arr_dot, color, id_polygon FROM table_polygons;");
 	while ((res = PQgetResult(conn))) {
 		if (PQresultStatus(res) == PGRES_FATAL_ERROR){
-			std::cerr<< PQresultErrorMessage(res)<<std::endl;
+			std::cerr << PQresultErrorMessage(res)<<std::endl;
 			exit(0);
 		}
 		int		nbrRow = PQntuples(res);
@@ -220,16 +222,36 @@ std::vector<ObjPolygon *>		LogisticsController::_getPolygonIntoJSON(JSON &json_p
 
 	//connect ro db
 PGconn							*LogisticsController::_connectTo_db() {
-	PGconn	*conn = 0;
-	std::string	user = "postgres";
-	std::string	password = "1234";
-	std::string	host = "localhost";
-	std::string	dbname = "polygons";
-	std::string	port = "5432";
+	JSON			json;
+	std::ifstream	file;
+	PGconn			*conn = 0;
+	std::string		user; 
+	std::string		password;
+	std::string		host;
+	std::string		dbname;
+	int				port;
 
-	std::cerr << "LogisticsController::_connectTo_db\n";
+	file.open(DATA_BASE_INFO_PATH);
+	if (!file.is_open()) {
+		std::cerr << "Fail open: " << DATA_BASE_INFO_PATH << "\n";
+		std::cerr << "Add this file or reinit \n	#define DATA_BASE_INFO_PATH\nin inc/lib.h\n";
+		return 0;
+	}
 
-	conn = PQsetdbLogin(host.c_str(), port.c_str(), 0, 0, dbname.c_str(), user.c_str(), password.c_str());
+	try {
+		file >> json;
+		user = json["user"];
+		password = json["password"];
+		host = json["host"];
+		dbname = json["dbname"];
+		port = json["port"];
+	}
+	catch (std::exception &e) {
+		std::cerr << "Incorect JSON: " << DATA_BASE_INFO_PATH << "\n";
+		return 0;
+	}
+
+	conn = PQsetdbLogin(host.c_str(), std::to_string(port).c_str(), 0, 0, dbname.c_str(), user.c_str(), password.c_str());
 	if (PQstatus(conn) != CONNECTION_OK) {
 		std::cerr << "Error in connection to server\n";
 		return 0;
@@ -536,7 +558,21 @@ void							LogisticsController::deletePolygonFrom_db(int id) {
 	PGconn			*conn = this->_connectTo_db();
 	PGresult		*res;
 
-	sql_str = "DELETE FROM table_polygons WHERE id_polygon = \'" + std::to_string(id) + "\'";
+	sql_str = "DELETE FROM table_polygons WHERE id_polygon = \'" + std::to_string(id) + "\';";
+	PQsendQuery(conn, sql_str.c_str());
+	res = PQgetResult(conn);
+	if (res && PQresultStatus(res) == PGRES_FATAL_ERROR) {
+		std::cerr<< PQresultErrorMessage(res) << std::endl;
+	}
+}
+
+	// delete all !!!!!!!!!! polygons from db (create sql and exec)
+void							LogisticsController::deleteAllPolygonsFrom_db() {
+	std::string		sql_str;
+	PGconn			*conn = this->_connectTo_db();
+	PGresult		*res;
+
+	sql_str = "DELETE FROM table_polygons *;";
 	PQsendQuery(conn, sql_str.c_str());
 	res = PQgetResult(conn);
 	if (res && PQresultStatus(res) == PGRES_FATAL_ERROR) {
@@ -654,4 +690,22 @@ void							LogisticsController::showSituationWithPolygons(
 	LogisticsController::showSituationWithPolygons(new_list_plast);
 
 }
+
+	// create new table_polygons for database if not exist
+
+void							LogisticsController::_create_new_table(PGconn *conn) {
+	std::stringstream	request;
+
+	request << "CREATE TABLE IF NOT EXISTS table_polygons(\n"
+		<<  "arr_dot json NOT NULL,\n"
+ 		<< "color text NOT NULL,\n"
+ 		<< "id_polygon text NOT NULL\n"
+		<< ");";
+
+	PQsendQuery(conn, request.str().c_str());
+}
+
+
+
+
 

@@ -85,7 +85,7 @@ void			ObjPolyline::_add_intersectionDots() {
 	int							i = -1;
 	int							size = this->list_pDot.size();
 
-	std::cerr << "ObjPolyline::_add_intersectionDots\n";
+	std::cerr << size <<  " ObjPolyline::_add_intersectionDots\n";
 	while (++i < size - 1) {
 		DotPolyline 				*pDot1 = this->list_pDot[i];
 		DotPolyline 				*pDot2 = this->list_pDot[i + 1];
@@ -104,13 +104,11 @@ void			ObjPolyline::_add_intersectionDots() {
 			//
 		Dot							controlDot1 = Geometry::getCenter(Line(pDot1->dot, pDot2->dot));
 		Dot							controlDot2 = Geometry::getCenter(Line(pDot2->dot, pDot3->dot));
-
 		if (pDot2->position != RelativePosition::Border) {
 			pDot2->isIntersect = false;
 			continue;
 		}
 		bool	local_isIntersect = false;
-
 		for (ObjPolygon *polygon : pDot2->listOf_contactAreas) {
 			RelativePosition	position1 = Geometry::whereIs_dotInPolygon(controlDot1, polygon);
 			RelativePosition	position2 = Geometry::whereIs_dotInPolygon(controlDot2, polygon);
@@ -134,6 +132,7 @@ void			ObjPolyline::_add_timeAndDistance_for_intersectionDots() {
 	int		i = -1;
 	int		size = this->list_pDot.size();
 
+	std::cerr << "sam\n";
 	while (++i < size - 1) {
 		DotPolyline 	*pDot1 = this->list_pDot[i];
 		DotPolyline 	*pDot2 = this->list_pDot[i + 1];
