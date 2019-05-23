@@ -1,43 +1,39 @@
-cmake_minimum_required(VERSION 3.10.2)
+cmake_minimum_required(VERSION 3.13.4)
 
 project(MyProject)
 
-#set(Boost_USE_RELEASE_LIBS ON)
+######
 
-#set(Boost_USE_MULTITHREAD ON)
+#set(Boost_USE_STATIC_LIBS ON)
+#set(Boost_USE_MULTITHREADED ON)
 
-set(PostgreSQL_TYPE_INCLUDE_DIR "/usr/lib/postgresql/10/bin")
+#set(BOOST_ROOT "C:/all_with_prog/plugins/boost_1_64_0_b2")
 
+#set(BOOST_LIBRARYDIR "C:/all_with_prog/plugins/boost_1_64_0_b2/lib64-msvc-9.0")
+
+#set ( CMAKE_POSTFIX_PATH "${CMAKE_POSTFIX_PATH} -lboost_thread -lboost_system -lpthread" )
+
+
+#include_directories ( ${CPPNETLIB_INCLUDE_DIRS} )
+
+#target_link_libraries ( MyProject ${CPPNETLIB_LIBRARIES} )
+######
+
+
+# PostgreSQL
 find_package(PostgreSQL REQUIRED)
 
 link_libraries(${PostgreSQL_LIBRARIES})
 
-# add_definitions(-DBOOST_ERROR_CODE_HEADER_ONLY)
-
-# set(BOOST_LIBRARY_DIR "/usr/lib/x86_64-linux-gnu/")
-
-find_package(Boost 1.65 REQUIRED)
-
-
-include_directories(
-	inc 
-	json/include 
-	${PostgreSQL_INCLUDE_DIRS}
-	${boost_INCLUDE_DIRS}
-)
-
- link_directories( ${Boost_LIBRARY_DIRS})
+include_directories(inc json/include ${PostgreSQL_INCLUDE_DIRS})
 
 set(JSON_BuildTests OFF CACHE INTERNAL "")
 
 add_subdirectory(json)
 
 set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -lboost_thread -lboost_system -lpthread")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -lws2_32")
 
-# set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lboost_thread -lboost_system -lpthread")
-
-#-lws2_32
 
 set(SRC
 		src/main.cpp
@@ -56,9 +52,3 @@ set(SRC
 	)
 
 add_executable(log ${SRC})
-
-add_executable(test_client trash/test_client.cpp)
-
-
-
-

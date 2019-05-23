@@ -7,8 +7,8 @@
 // y = (c2 * a1 - c1 * a2) / (a2 * b1 - a1 * b2)
 
 std::vector<Dot>	Geometry::getDotIntersect(Line &line, ObjPolygon *polygon) {
-	if (!polygon || (!Geometry::_is_dot_in_square(line.dot1, polygon)
-				&& !Geometry::_is_dot_in_square(line.dot2, polygon)) )
+	if (!polygon || (!Geometry::is_dot_in_square(line.dot1, polygon)
+				&& !Geometry::is_dot_in_square(line.dot2, polygon)) )
 		std::vector<Dot>();
 
 	std::vector<Dot>	arr_dot = polygon->data.arr_dot;
@@ -238,7 +238,7 @@ bool			Geometry::is_dotInPolygon(Dot &dot, ObjPolygon *polygon) {
 // return RelativePosition outside\inside\border
 
 RelativePosition		Geometry::whereIs_dotInPolygon(Dot &check_dot, ObjPolygon *polygon) {
-	if (!polygon || !Geometry::_is_dot_in_square(check_dot, polygon))
+	if (!polygon || !Geometry::is_dot_in_square(check_dot, polygon))
 		return RelativePosition::Outside;
 
 	Line				check_line(check_dot, Dot(check_dot.x, polygon->data.max_y));
@@ -289,7 +289,9 @@ Dot		Geometry::getCenter(Line line) {
 	return Dot(x, y);
 }
 
-bool	Geometry::_is_dot_in_square(Dot check_dot, ObjPolygon *polygon) {
+bool	Geometry::is_dot_in_square(Dot check_dot, ObjPolygon *polygon) {
+	if (!polygon)
+		return true;
 	double	x = check_dot.x;
 	double	y = check_dot.y;
 

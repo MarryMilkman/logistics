@@ -2,22 +2,80 @@
 
 #include "LogisticsController.hpp"
 
-LServer::LServer() : 
-	_acceptor(boost::asio::ip::tcp::acceptor(
-		this->_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), 8080)))
-{}
+LServer::LServer() {}
 
 LServer::~LServer() {
+	closesocket(this->_listen_socket);
+    freeaddrinfo(this->_addr);
+    WSACleanup();
 }
 
+LServer::LServer(std::string host, int port) {
+	WSADATA	wsaData;
+	int		result = WSAStartup(MAKEWORD(2, 2), &wsaData);
 
-
-LServer::LServer(std::string host, int port) : 
-	_acceptor(ip::tcp::acceptor(this->_service, ip::tcp::endpoint(ip::address::from_string(host.c_str()), port)))
-{
+	if (result != 0) {
+        std::cerr << "WSAStartup failed: " << result << "\n";
+        return ;
+    }
+	if (this->_init_addr(host, port))
+		return ;
+	if (this->_init_listen_soket())
+		return ;
 	this->_startWork();
 }
 
+
+
+	// init this->_addr
+int			LServer::_init_addr(std::string host, int port) {
+	struct addrinfo hints;
+
+	this->_addr = 0;
+	ZeroMemory(&hints, sizeof(hints));
+	hints.ai_family = AF_INET; // AF_INET определяет, что будет
+    hints.ai_socktype = SOCK_STREAM; // Задаем потоковый тип сокета
+    hints.ai_protocol = IPPROTO_TCP; // Используем протокол TCP
+    hints.ai_flags = AI_PASSIVE; // Сокет будет биндиться на адрес,
+    int	result = getaddrinfo(host.c_str(), std::to_string(port).c_str(), &hints, &this->_addr);
+
+    if (result != 0) {
+        std::cerr << "getaddrinfo failed: " << result << "\n";
+        WSACleanup();
+        return 1;
+    }
+    return 0;
+}
+
+	// init this->_listen_soket
+int		LServer::_init_listen_soket() {
+	this->_listen_socket = socket(this->_addr->ai_family,
+		this->_addr->ai_socktype, this->_addr->ai_protocol);
+	if (this->_listen_socket == INVALID_SOCKET) {
+		std::cerr << "Error at socket: " << WSAGetLastError() << "\n";
+		freeaddrinfo(this->_addr);
+		WSACleanup();
+		return 1;
+	}
+	int	result;
+
+	result = bind(this->_listen_socket, this->_addr->ai_addr, (int)this->_addr->ai_addrlen);
+	if (result == SOCKET_ERROR) {
+		std::cerr << "bind failed with error: " << WSAGetLastError() << "\n";
+        freeaddrinfo(this->_addr);
+        closesocket(this->_listen_socket);
+        WSACleanup();
+        return 1;
+	}
+	result = listen(this->_listen_socket, SOMAXCONN);
+	if (result) {
+        std::cerr << "listen failed with error: " << WSAGetLastError() << "\n";
+        closesocket(this->_listen_socket);
+        WSACleanup();
+        return 1;
+    }
+	return 0;
+}
 
 
 
@@ -32,20 +90,33 @@ void		LServer::_startWork() {
 
 	controller.reloadPolygonsFrom_db();
 	while (1) {
-		boost::asio::ip::tcp::socket	client_socket(this->_service);
-		int								bytes;
-		char							request[500000];
-		std::string						response;
-		boost::system::error_code 		err;
+		int			client_socket = accept(this->_listen_socket, NULL, NULL);
+		int			result;
+		char		request[500000];
 
-		this->_acceptor.accept(client_socket);
-		bytes = read(client_socket, boost::asio::buffer(request), boost::asio::transfer_at_least(1), err);
-		request[bytes] = 0;
-			std::cerr << "Request:\n" << request << "\n\n";
-		response = this->_getResponse(std::string(request));
-		client_socket.write_some(boost::asio::buffer(response));
-		client_socket.close();
+		if (client_socket == INVALID_SOCKET) {
+			std::cerr << "accept failed: " << WSAGetLastError() << "\n";
+			freeaddrinfo(this->_addr);
+			closesocket(this->_listen_socket);
+			WSACleanup();
+			return ;
+		}
+		result = recv(client_socket, request, 500000, 0);
+		if (result == SOCKET_ERROR)
+			std::cerr << "recv failed: " << result << "\n";
+		else if (result > 0) {
+			std::string		response;
 
+			request[result] = 0;
+
+				std::cerr << "Request:\n" << request << "\n\n";
+
+			response = this->_getResponse(std::string(request));
+			result = send(client_socket, response.c_str(), response.size(), 0);
+			if (result == SOCKET_ERROR)
+				std::cerr << "send failed: " << WSAGetLastError() << "\n";
+		}
+		closesocket(client_socket);
 	}
 }
 

@@ -14,16 +14,19 @@ public:
 	~LServer();
 
 private:
-	boost::asio::io_service			_service;
-	boost::asio::ip::tcp::acceptor	_acceptor;
+	struct addrinfo		*_addr;
+	int					_listen_socket;
 
-	void					_startWork();
-	std::string				_getResponse(std::string request);
-	JSON					_get_json_from_request(std::string request, TypeJSON *type);
-	TypeJSON				_getType_of_responseJSON(JSON responseJSON);
+	int					_init_addr(std::string, int port);
+	int					_init_listen_soket();
 
-	std::string				_get_errorHeader();
-	std::string 			_get_successHeader(ResultStatus status, int size);
+	void				_startWork();
+	std::string			_getResponse(std::string request);
+	JSON				_get_json_from_request(std::string request, TypeJSON *type);
+	TypeJSON			_getType_of_responseJSON(JSON responseJSON);
+	
+	std::string			_get_errorHeader();
+	std::string 		_get_successHeader(ResultStatus status, int size);
 };
 
 

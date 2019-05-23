@@ -11,12 +11,12 @@ class Geometry
 	Geometry() {}
 public:
 	~Geometry() {}
-	
-	
+
+
 	static bool			is_lineHaveDot(Line &line, Dot &dot);
 	static Dot			getDotIntersect(Line &line1, Line &line2);
 	static bool			is_intersect_line_and_endlessLine(Line &line, Line &endlessLine);
-	
+
 	static double			len_from_to_(Dot &dot1, Dot &dot2);
 	static bool				is_dotInPolygon(Dot &dot, ObjPolygon *polygon);
 	static RelativePosition	whereIs_dotInPolygon(Dot &check_dot, ObjPolygon *polygon);
@@ -25,6 +25,8 @@ public:
 	static Dot				getCenter(Line line);
 
 	static double			get_distance(Line line);
+
+	static bool				is_dot_in_square(Dot check_dot, ObjPolygon *polygon);
 
 	class	GeometryException : public std::exception
 	{
@@ -35,9 +37,6 @@ public:
 		virtual const char			*what() const throw() { return ""; }
 	};
 
-private:
-
-	static bool			_is_dot_in_square(Dot check_dot, ObjPolygon *polygon);
 };
 
 #endif

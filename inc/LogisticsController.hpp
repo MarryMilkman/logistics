@@ -30,7 +30,6 @@ public:
 											IntersectionType *answer);
 
 	void								deletePolygonFrom_db(int id);
-	void								deleteAllPolygonsFrom_db();
 
 	void								showSituationWithPolygons(std::vector<Plast *> list_plast);
 	Plast								*get_plast();
@@ -81,8 +80,6 @@ private:
 	void								_add_max_min_center_XY_toPolygonData(
 											std::vector<Dot> &arr_dot,
 											t_polygon_data &data);
-
-	void								_create_new_table(PGconn *conn);
 };
 
 #endif

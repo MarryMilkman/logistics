@@ -7,6 +7,7 @@ class DotPolyline;
 class TetraTreePolygons;
 class DotPolyline;
 class Line;
+class Plast;
 
 class ObjPolyline
 {
@@ -40,14 +41,14 @@ private:
 							Dot dirention,
 							int i);
 
-	static void			_find_intersect(
+	static std::vector<Plast *>	_find_intersect(
 							TetraTreePolygons *tt_polygons,
 							Line line,
 							std::vector<Dot> &r_list);
 
 	void				_sort_list_intersect(
-								std::vector<Dot> &list_dot,
-								Dot dirention);
+							std::vector<Dot> &list_dot,
+							Dot dirention);
 
 };
 

@@ -1,7 +1,6 @@
 #include "lib.h"
 #include "LServer.hpp"
 // #include "LogisticsController.hpp"
-// #include <boost/asio.hpp>
 
 #include "geometry/Dot.hpp"
 #include "geometry/Geometry.hpp"
@@ -29,6 +28,7 @@ void	test_geometry() {
 
 int main(int argc, char const *argv[])
 {
-	LServer		server("127.0.0.1", 8080);
+	LServer		server("localhost", 8080);
+
 	return 0;
 }

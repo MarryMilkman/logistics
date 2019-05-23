@@ -27,10 +27,15 @@ public:
 	static bool			is_squareOfPolygonsIntersect(ObjPolygon *p1, ObjPolygon *p2);
 	static ObjPolygon	*checkDominationSquare(ObjPolygon *p1, ObjPolygon *p2, bool &is_equal);
 
+	static bool			is_dot_can_be_in_polygon(Dot dot, ObjPolygon *polygon);
+
+
 	ObjPolygon			&operator=(ObjPolygon const &ref);
 private:
 
 
 };
+
+std::ostream&			operator<<(std::ostream& os, ObjPolygon const *polygon);
 
 #endif
