@@ -19,7 +19,9 @@ public:
 	Dot							dot;
 	std::string					current_time;
 	bool						isIntersect;
+	
 	RelativePosition			position;
+
 	std::vector<ObjPolygon *>	listOf_contactAreas;
 	ObjPolygon					*currentArea;
 	ObjPolygon					*previousArea;
@@ -28,12 +30,15 @@ public:
 	double						distance;
 
 	void						initLocation(ObjPolygon *mostPossiblePolygon);
-	RelativePosition			initLocation_plast(Plast *plast);
-
+	
 	DotPolyline					&operator=(DotPolyline const &ref);
 
 private:
-	RelativePosition	_initLocation_tt_polygons(TetraTreePolygons *tt_polygons);
+	ObjPolygon					*_get_start_polygon(ObjPolygon *mostPossiblePolygon);
+	void						_initLocation_basePolygon(ObjPolygon *basePolygon);
+	RelativePosition			_initLocation_tt_polygons(
+									TetraTreePolygons *tt_polygons,
+									std::vector<ObjPolygon *>	&nestedPolygons);
 
 
 

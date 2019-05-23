@@ -28,6 +28,10 @@ public:
 
 	static Plast				*getOveralPlast(ObjPolygon *p1, ObjPolygon *p2);
 
+	static bool					is_dot_can_be_in_plast(Dot dot, Plast *plast);
+
+	bool						empty();
+
 private:
 
 	void						_update_max_min_coord(ObjPolygon *polygon);

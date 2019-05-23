@@ -1,4 +1,6 @@
 #include "ObjPolyline.hpp"
+#include "ObjPolygon.hpp"
+
 #include "DotPolyline.hpp"
 
 #include "Plast.hpp"
@@ -26,7 +28,6 @@ ObjPolyline::~ObjPolyline() {
 
 ObjPolyline		&ObjPolyline::operator=(ObjPolyline const & ref) {
 	this->list_pDot = ref.list_pDot;
-	return *this;
 }
 
 	// free data polyline
@@ -68,6 +69,7 @@ void			ObjPolyline::analyze_and_update_data() {
 	this->_setLocationOf_poliline_dots();
 	this->_add_intersectionDots();
 	this->_add_timeAndDistance_for_intersectionDots();
+	// this->showDots();
 }
 
 void			ObjPolyline::_setLocationOf_poliline_dots() {
@@ -85,7 +87,7 @@ void			ObjPolyline::_add_intersectionDots() {
 	int							i = -1;
 	int							size = this->list_pDot.size();
 
-	std::cerr << size <<  " ObjPolyline::_add_intersectionDots\n";
+	std::cerr << "ObjPolyline::_add_intersectionDots\n";
 	while (++i < size - 1) {
 		DotPolyline 				*pDot1 = this->list_pDot[i];
 		DotPolyline 				*pDot2 = this->list_pDot[i + 1];
@@ -98,33 +100,47 @@ void			ObjPolyline::_add_intersectionDots() {
 	}
 	i = -1;
 	while (++i < size - 2) {
-		DotPolyline 				*pDot1 = list_pDot[i];
-		DotPolyline 				*pDot2 = list_pDot[i + 1];
-		DotPolyline 				*pDot3 = list_pDot[i + 2];
+		DotPolyline 				*pDot1 = this->list_pDot[i];
+		DotPolyline 				*pDot2 = this->list_pDot[i + 1];
+		DotPolyline 				*pDot3 = this->list_pDot[i + 2];
 			//
 		Dot							controlDot1 = Geometry::getCenter(Line(pDot1->dot, pDot2->dot));
 		Dot							controlDot2 = Geometry::getCenter(Line(pDot2->dot, pDot3->dot));
+
+		
+
 		if (pDot2->position != RelativePosition::Border) {
 			pDot2->isIntersect = false;
 			continue;
 		}
-		bool	local_isIntersect = false;
-		for (ObjPolygon *polygon : pDot2->listOf_contactAreas) {
-			RelativePosition	position1 = Geometry::whereIs_dotInPolygon(controlDot1, polygon);
-			RelativePosition	position2 = Geometry::whereIs_dotInPolygon(controlDot2, polygon);
+		DotPolyline					control_pDot1(controlDot1, "");
+		DotPolyline					control_pDot2(controlDot2, "");
 
-			if (position1 != position2)
-				local_isIntersect = true;
-			if (position1 == RelativePosition::Inside && local_isIntersect)
-				pDot2->previousArea = polygon;
-			if (position2 == RelativePosition::Inside && local_isIntersect)
-				pDot2->nextArea = polygon;
-			if (pDot2->previousArea && pDot2->nextArea)
-				break ;
-			// if (local_isIntersect)
-			// 	break ;
+		control_pDot1.initLocation(pDot1->currentArea);
+		control_pDot2.initLocation(pDot2->currentArea);
+
+		if (control_pDot1.currentArea != control_pDot2.currentArea) {
+			pDot2->nextArea = control_pDot2.currentArea;
+			pDot2->isIntersect = true;
 		}
-		pDot2->isIntersect = local_isIntersect;
+		pDot2->currentArea = control_pDot1.currentArea;
+		// pDot2->currentArea = 0;
+		// for (ObjPolygon *polygon : pDot2->listOf_contactAreas) {
+		// 	RelativePosition	position1 = Geometry::whereIs_dotInPolygon(controlDot1, polygon);
+		// 	RelativePosition	position2 = Geometry::whereIs_dotInPolygon(controlDot2, polygon);
+
+		// 	if (position1 != position2)
+		// 		local_isIntersect = true;
+		// 	if (position1 == RelativePosition::Inside && local_isIntersect)
+		// 		pDot2->previousArea = polygon;
+		// 	if (position2 == RelativePosition::Inside && local_isIntersect)
+		// 		pDot2->nextArea = polygon;
+		// 	if (pDot2->previousArea && pDot2->nextArea)
+		// 		break ;
+		// 	// if (local_isIntersect)
+		// 	// 	break ;
+		// }
+		// pDot2->isIntersect = local_isIntersect;
 	}
 }
 
@@ -132,7 +148,6 @@ void			ObjPolyline::_add_timeAndDistance_for_intersectionDots() {
 	int		i = -1;
 	int		size = this->list_pDot.size();
 
-	std::cerr << "sam\n";
 	while (++i < size - 1) {
 		DotPolyline 	*pDot1 = this->list_pDot[i];
 		DotPolyline 	*pDot2 = this->list_pDot[i + 1];
@@ -167,7 +182,7 @@ void			ObjPolyline::_add_list_intersect_dot_to_list_pDot_and_initLocate(
 		DotPolyline	*new_pDot = new DotPolyline();
 
 		new_pDot->dot = dot;
-		new_pDot->initLocation(this->list_pDot[i]->listOf_contactAreas[0]);
+		new_pDot->initLocation(this->list_pDot[i + j]->listOf_contactAreas[0]);
 		this->list_pDot.insert(this->list_pDot.begin() + i + 1, new_pDot);
 		j++;
 	}
@@ -179,6 +194,7 @@ void			ObjPolyline::_sort_list_intersect(
 {
 	if (list_dot.size() <= 1)
 		return ;
+
 	std::vector<Dot>	sort_list;
 
 	for (Dot dot : list_dot) {
@@ -190,11 +206,11 @@ void			ObjPolyline::_sort_list_intersect(
 			continue;
 		}
 		while (++i < size) {
-			if (dot.x < sort_list[i].x || dot.y < sort_list[i].y)
+			if (dot.x < sort_list[i].x || dot.y < sort_list[i].y) {
 				sort_list.insert(sort_list.begin() + i, dot);
+				break ;
+			}
 		}
-		if (size == sort_list.size())
-			sort_list.insert(sort_list.begin() + i, dot);
 	}
 	if (sort_list[0].x < dirention.x || sort_list[0].y < dirention.y)
 		std::reverse(sort_list.begin(), sort_list.end());
@@ -202,26 +218,42 @@ void			ObjPolyline::_sort_list_intersect(
 }
 
 std::vector<Dot>		ObjPolyline::get_list_intersect_dots(DotPolyline *pDot1, DotPolyline *pDot2) {
-	std::vector<Dot>	r_list;
-	Plast				*plast = Plast::getOveralPlast(pDot1->listOf_contactAreas[0], pDot2->listOf_contactAreas[0]);
-	Line				line(pDot1->dot, pDot2->dot);
+	std::vector<Dot>		r_list;
+	Plast					*plast = Plast::getOveralPlast(pDot1->listOf_contactAreas[0], pDot2->listOf_contactAreas[0]);
+	Line					line(pDot1->dot, pDot2->dot);
+	std::vector<Plast *>	list_plast;
 
-	ObjPolyline::_find_intersect(plast->_tt_polygons, line, r_list);
+	list_plast.push_back(plast);
+	while (list_plast.size()) {
+		std::vector<Plast *>	next_list_plast;
+		for (Plast *check_plast : list_plast) {
+			std::vector<Plast *>	locat_list_plast;
+			locat_list_plast = ObjPolyline::_find_intersect(check_plast->_tt_polygons, line, r_list);
+			for (Plast *local_plast : locat_list_plast)
+				next_list_plast.push_back(local_plast);
+		}
+		list_plast = next_list_plast;
+	}
 	return r_list;
 }
 
-void					ObjPolyline::_find_intersect(
+std::vector<Plast *>		ObjPolyline::_find_intersect(
 								TetraTreePolygons *tt_polygons,
 								Line line,
 								std::vector<Dot> &r_list)
 {
 	if (!tt_polygons)
-		return ;
+		return std::vector<Plast *>();
 
-	ObjPolygon			*check_polygon = tt_polygons->polygon;
-	std::vector<Dot>	new_list_intersectDots;
-	bool				is_exist;
+	ObjPolygon				*check_polygon = tt_polygons->polygon;
+	std::vector<Dot>		new_list_intersectDots;
+	std::vector<Plast *>	r_list_plast = std::vector<Plast *>();
+	bool					is_exist;
 
+	if (check_polygon && check_polygon->plast->_tt_polygons &&
+			check_polygon->plast->_tt_polygons->polygon) {
+		r_list_plast.push_back(check_polygon->plast);
+	}
 	new_list_intersectDots = Geometry::getDotIntersect(line, check_polygon);
 	for (Dot dot : new_list_intersectDots) {
 		is_exist = false;
@@ -234,14 +266,23 @@ void					ObjPolyline::_find_intersect(
 		if (!is_exist)
 			r_list.insert(r_list.end(), dot);
 	}
-	if (tt_polygons->moreX_lessY)
-		ObjPolyline::_find_intersect(tt_polygons->moreX_lessY, line, r_list);
-	if (tt_polygons->moreX_moreY)
-		ObjPolyline::_find_intersect(tt_polygons->moreX_moreY, line, r_list);
-	if (tt_polygons->lessX_moreY)
-		ObjPolyline::_find_intersect(tt_polygons->lessX_moreY, line, r_list);
-	if (tt_polygons->lessX_lessY)
-		ObjPolyline::_find_intersect(tt_polygons->lessX_lessY, line, r_list);
+	if (tt_polygons->moreX_lessY) {
+		for (Plast *local_plast : ObjPolyline::_find_intersect(tt_polygons->moreX_lessY, line, r_list))
+			r_list_plast.push_back(local_plast);
+	}
+	if (tt_polygons->moreX_moreY) {
+		for (Plast *local_plast : ObjPolyline::_find_intersect(tt_polygons->moreX_moreY, line, r_list))
+			r_list_plast.push_back(local_plast);
+	}
+	if (tt_polygons->lessX_moreY) {
+		for (Plast *local_plast : ObjPolyline::_find_intersect(tt_polygons->lessX_moreY, line, r_list))
+			r_list_plast.push_back(local_plast);
+	}
+	if (tt_polygons->lessX_lessY) {
+		for (Plast *local_plast : ObjPolyline::_find_intersect(tt_polygons->lessX_lessY, line, r_list))
+			r_list_plast.push_back(local_plast);
+	}
+	return r_list_plast;
 }
 
 void					ObjPolyline::showDots() {
@@ -250,10 +291,11 @@ void					ObjPolyline::showDots() {
 	std::cerr << "ObjPolyline::_showDotsPolyline\n";
 	for (DotPolyline *pDot : this->list_pDot) {
 		std::cerr << i++ << " dot:\n" << pDot->dot.x << "\n" 
-				<< pDot->dot.y << "\n" << pDot->current_time << "\n" 
+				<< pDot->dot.y << "\n" << "time: " << pDot->current_time << "\n" 
 				<< pDot->isIntersect << "\n"
 				<< pDot->position << "\n"
-				<< pDot->listOf_contactAreas[0] << "\n"
-				<< pDot->distance << "\n";
+				<< pDot->listOf_contactAreas[0]
+				<< pDot->distance << "\n"
+				<< pDot->listOf_contactAreas.size() << "\n\n";
 	}
 }

@@ -45,9 +45,6 @@ std::vector<ObjPolygon *>	Plast::addNewPolygon_toPlast(
 	}
 	if (answer == IntersectionType::PolygonInclude) {
 		Plast	*next_plast = answer_FromCheckIntersection_polygons[0]->plast;
-
-		// this->_update_max_min_coord(polygon);
-		std::cerr << answer_FromCheckIntersection_polygons[0] << " pam pam PolygonInclude\n";
 		return next_plast->addNewPolygon_toPlast(polygon, answer_FromCheckIntersection_polygons[0], answer);
 	}
 	if (answer == IntersectionType::PolygonUpper) {
@@ -139,4 +136,21 @@ Plast			*Plast::getOveralPlast(ObjPolygon *p1, ObjPolygon *p2) {
 	if (!overalPolygon)
 		return zeroPlast;
 	return overalPolygon->plast;
+}
+
+
+bool		Plast::is_dot_can_be_in_plast(Dot dot, Plast *plast) {
+	if (!plast)
+		return false;
+
+	if (dot.x > plast->max_x || dot.x < plast->min_x || dot.y > plast->max_y || dot.y < plast->min_y)
+		return false;
+	return true;
+}
+
+
+bool		Plast::empty() {
+	if (!this || !this->_tt_polygons)
+		return true;
+	return false;
 }
