@@ -7,6 +7,7 @@ class DotPolyline;
 class TetraTreePolygons;
 class DotPolyline;
 class Line;
+class Plast;
 
 class ObjPolyline
 {
