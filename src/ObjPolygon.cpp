@@ -32,6 +32,7 @@ ObjPolygon		&ObjPolygon::operator=(ObjPolygon const & ref) {
 	this->plast = ref.plast;
 	this->parent = ref.parent;
 	this->data = ref.data;
+	return *this;
 }
 
 void			ObjPolygon::get_log() {

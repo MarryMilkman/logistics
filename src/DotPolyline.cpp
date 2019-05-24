@@ -49,6 +49,7 @@ DotPolyline		&DotPolyline::operator=(DotPolyline const & ref) {
 	this->previousArea = ref.previousArea;
 	this->nextArea = ref.nextArea;
 	this->id = ref.id;
+	return *this;
 }
 
 
