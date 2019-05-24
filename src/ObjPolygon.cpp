@@ -32,7 +32,6 @@ ObjPolygon		&ObjPolygon::operator=(ObjPolygon const & ref) {
 	this->plast = ref.plast;
 	this->parent = ref.parent;
 	this->data = ref.data;
-	return *this;
 }
 
 void			ObjPolygon::get_log() {
@@ -124,5 +123,25 @@ bool			ObjPolygon::is_polygonsEqual(ObjPolygon *p1, ObjPolygon *p2) {
 		if (!is_equal)
 			return false;
 	}
+	return true;
+}
+
+
+std::ostream&	operator<<(std::ostream& os, ObjPolygon const  *polygon) {
+	os << "Polygon id: ";
+	if (polygon)
+		os << polygon->data.id << "\n";
+	else
+		os << "0" << "\n";
+	return os;
+}
+
+
+bool			ObjPolygon::is_dot_can_be_in_polygon(Dot dot, ObjPolygon *polygon) {
+		if (!polygon)
+		return false;
+
+	if (dot.x > polygon->data.max_x || dot.x < polygon->data.min_x || dot.y > polygon->data.max_y || dot.y < polygon->data.min_y)
+		return false;
 	return true;
 }
