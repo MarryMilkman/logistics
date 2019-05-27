@@ -70,7 +70,7 @@ void			ObjPolyline::analyze_and_update_data() {
 	this->_setLocationOf_poliline_dots();
 	this->_add_intersectionDots();
 	this->_add_timeAndDistance_for_intersectionDots();
-	// this->showDots();
+	this->showDots();
 }
 
 void			ObjPolyline::_setLocationOf_poliline_dots() {
@@ -108,7 +108,6 @@ void			ObjPolyline::_add_intersectionDots() {
 		Dot							controlDot1 = Geometry::getCenter(Line(pDot1->dot, pDot2->dot));
 		Dot							controlDot2 = Geometry::getCenter(Line(pDot2->dot, pDot3->dot));
 
-		
 
 		if (pDot2->position != RelativePosition::Border) {
 			pDot2->isIntersect = false;
@@ -255,9 +254,12 @@ std::vector<Plast *>		ObjPolyline::_find_intersect(
 			check_polygon->plast->_tt_polygons->polygon) {
 		r_list_plast.push_back(check_polygon->plast);
 	}
+	std::cerr << "Line: \n" << line.dot1.x << ":" << line.dot1.y
+				<< ", " << line.dot2.x << ":" << line.dot2.y << "\n";
 	new_list_intersectDots = Geometry::getDotIntersect(line, check_polygon);
 	for (Dot dot : new_list_intersectDots) {
 		is_exist = false;
+		std::cerr << "Dot: " << dot.x << " : " << dot.y << "\n";
 		for (Dot check_dot : r_list) {
 			if (check_dot == dot) {
 				is_exist = true;

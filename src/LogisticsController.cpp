@@ -64,8 +64,8 @@ void				LogisticsController::addPolygon_to_controller_and_db(
 	// ObjPolygon					*polygon;
 	IntersectionType			answer;
 	std::vector<ObjPolygon *>	conflictPolygons;
-	int							count_arr_dot = json_polygon["coords"].size();
-	int							i = -1;
+	// int							count_arr_dot = json_polygon["coords"].size();
+	// int							i = -1;
 
 	std::cerr << "LogisticsController::addPolygon_to_controller_and_db\n";
 	this->_status = ResultStatus::Polygon_added;
@@ -99,7 +99,7 @@ void				LogisticsController::reloadPolygonsFrom_db() {
 	PGconn						*conn = this->_connectTo_db();
 	PGresult					*res;
 	std::vector<ObjPolygon *>	parts_of_one_area;	
-	ObjPolygon					*polygon;
+	// ObjPolygon					*polygon;
 	std::vector<ObjPolygon *>	conflictPolygons;
 
 	std::cerr << "LogisticsController::reloadPolygonsFrom_db\n";
@@ -109,7 +109,7 @@ void				LogisticsController::reloadPolygonsFrom_db() {
 		exit(1);
 	}
 	PQsendQuery(conn, "SELECT arr_dot, color, id_polygon FROM table_polygons;");
-	while (res = PQgetResult(conn) ) {
+	while ( (res = PQgetResult(conn)) ) {
 		if (PQresultStatus(res) == PGRES_FATAL_ERROR){
 			std::cerr<< PQresultErrorMessage(res)<<std::endl;
 			exit(0);
@@ -311,7 +311,6 @@ std::vector<ObjPolygon *>	LogisticsController::checkIntersection(
 		*answer = answ_from_intersection;
 	// Can be ERROR!
 	sortList_tt_polygons = TetraTreePolygons::createSortListFromChildOf_tt_polygons_withDestination(check_tt_polygon, check_polygon->data.center);
-	int	i;
 	for (TetraTreePolygons *new_check_tt_polygons : sortList_tt_polygons) {
 		if (!new_check_tt_polygons)
 			continue;
@@ -421,11 +420,11 @@ void							LogisticsController::_addResult() {
 
 	part_result = {
 		{
-			// coord_x (latitude)
-			// coord_y (longitude)
-			// distance
-			// time
-			// id_dot
+			{"latitude", 0.0},	// coord_x (latitude)
+			{"longitude", 0.0},	// coord_y (longitude)
+			{"distance", 0.0},	// distance
+			{"time", ""},		// time
+			{"id_dot", 0}		// id_dot
 		},
 		{
 			{"location", ""},
@@ -435,11 +434,11 @@ void							LogisticsController::_addResult() {
 	};
 	i = 0;
 	for (DotPolyline * pDot : this->_polyline->list_pDot) {
-		part_result[0][0] = pDot->dot.x;		// coord_x (latitude)
-		part_result[0][1] = pDot->dot.y;		// coord_y (longitude)
-		part_result[0][2] = pDot->distance;		// distance
-		part_result[0][3] = pDot->current_time;	// time
-		part_result[0][4] = pDot->id;			// id_dot
+		part_result[0]["latitude"] = pDot->dot.x;		// coord_x (latitude)
+		part_result[0]["longitude"] = pDot->dot.y;		// coord_y (longitude)
+		part_result[0]["distance"] = pDot->distance;	// distance
+		part_result[0]["time"] = pDot->current_time;	// time
+		part_result[0]["id_dot"] = pDot->id;			// id_dot
 
 		part_result[1]["is_intersect"] = pDot->isIntersect ? 1 : 0;
 		part_result[1]["location"] = pDot->currentArea == 0 ? "" : pDot->currentArea->data.id;
@@ -504,6 +503,7 @@ void							LogisticsController::_addResult_error_intersect_errorPartsOfOneArya(
 		{"name", ""}
 	};
 	
+	i = 0;
 	if (!parts_of_one_area.size())
 		return ;
 	part_result["name"] = parts_of_one_area[0]->data.id;
