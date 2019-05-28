@@ -438,29 +438,25 @@ void							LogisticsController::_addResult() {
 
 	part_result = {
 		{
-			{"latitude", 0.0},	// coord_x (latitude)
-			{"longitude", 0.0},	// coord_y (longitude)
-			{"distance", 0.0},	// distance
+			{"lat", 0.0},	// coord_x (latitude)
+			{"lon", 0.0},	// coord_y (longitude)
+			{"sumDistance", 0.0},	// distance
 			{"time", ""},		// time
-			{"id_dot", 0}		// id_dot
-		},
-		{
-			{"location", ""},
-			{"is_intersect", 0},
-			{"next_location", ""}
+			{"polygonName", ""},
+			{"polygonFeature", ""}
 		}
 	};
 	i = 0;
 	for (DotPolyline * pDot : this->_polyline->list_pDot) {
-		part_result[0]["latitude"] = pDot->dot.x;		// coord_x (latitude)
-		part_result[0]["longitude"] = pDot->dot.y;		// coord_y (longitude)
-		part_result[0]["distance"] = pDot->distance;	// distance
+		part_result[0]["lat"] = pDot->dot.x;		// coord_x (latitude)
+		part_result[0]["lon"] = pDot->dot.y;		// coord_y (longitude)
+		part_result[0]["sumDistance"] = pDot->distance;	// distance
 		part_result[0]["time"] = pDot->current_time;	// time
-		part_result[0]["id_dot"] = pDot->id;			// id_dot
+		// part_result[0]["id_dot"] = pDot->id;			// id_dot
 
-		part_result[1]["is_intersect"] = pDot->isIntersect ? 1 : 0;
-		part_result[1]["location"] = pDot->currentArea == 0 ? "" : pDot->currentArea->data.id;
-		part_result[1]["next_location"] = pDot->nextArea == 0 ? "" : pDot->nextArea->data.id;
+		part_result[0]["polygonFeature"] = pDot->isIntersect ? "OUTPUT" : "";
+		part_result[0]["polygonName"] = pDot->currentArea == 0 ? "" : pDot->currentArea->data.id;
+		// part_result[0]["next_location"] = pDot->nextArea == 0 ? "" : pDot->nextArea->data.id;
 		this->_result[i++] = part_result;
 	}
 }
