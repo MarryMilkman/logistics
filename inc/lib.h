@@ -1,12 +1,24 @@
 #ifndef LIB_H
 #define LIB_H
 
-#pragma warning(disable: 4996)
 
-#include <WinSock2.h>
-#include <WS2tcpip.h>
+#define DATA_BASE_INFO_PATH "../db_info.json"
+ 
 
-#pragma comment(lib, "Ws2_32.lib")
+# ifdef _WIN32
+
+#  pragma warning(disable: 4996)
+#  include <WinSock2.h>
+#  include <WS2tcpip.h>
+#  pragma comment(lib, "Ws2_32.lib")
+
+# else
+
+#  include <boost/asio.hpp>
+using namespace boost::asio;
+
+# endif
+
 
 #include <iostream>
 #include <sstream>

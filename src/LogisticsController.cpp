@@ -220,16 +220,50 @@ std::vector<ObjPolygon *>		LogisticsController::_getPolygonIntoJSON(JSON &json_p
 
 	//connect ro db
 PGconn							*LogisticsController::_connectTo_db() {
-	PGconn	*conn = 0;
-	std::string	user = "postgres";
-	std::string	password = "1234";
-	std::string	host = "localhost";
-	std::string	dbname = "polygons";
-	std::string	port = "5432";
+	// PGconn	*conn = 0;
+	// std::string	user = "postgres";
+	// std::string	password = "1234";
+	// std::string	host = "localhost";
+	// std::string	dbname = "polygons";
+	// std::string	port = "5432";
 
-	std::cerr << "LogisticsController::_connectTo_db\n";
+	// std::cerr << "LogisticsController::_connectTo_db\n";
 
-	conn = PQsetdbLogin(host.c_str(), port.c_str(), 0, 0, dbname.c_str(), user.c_str(), password.c_str());
+	// conn = PQsetdbLogin(host.c_str(), port.c_str(), 0, 0, dbname.c_str(), user.c_str(), password.c_str());
+	// if (PQstatus(conn) != CONNECTION_OK) {
+	// 	std::cerr << "Error in connection to server\n";
+	// 	return 0;
+	// }
+	// std::cout << "Success!\n";
+	// return conn;
+	JSON			json;
+	std::ifstream	file;
+	PGconn			*conn = 0;
+	std::string		user; 
+	std::string		password;
+	std::string		host;
+	std::string		dbname;
+	int				port;
+
+	file.open(DATA_BASE_INFO_PATH);
+	if (!file.is_open()) {
+		std::cerr << "Fail open: " << DATA_BASE_INFO_PATH << "\n";
+		std::cerr << "Add this file or reinit \n	#define DATA_BASE_INFO_PATH\nin inc/lib.h\n";
+		return 0;
+	}
+	try {
+		file >> json;
+		user = json["user"];
+		password = json["password"];
+		host = json["host"];
+		dbname = json["dbname"];
+		port = json["port"];
+	}
+	catch (std::exception &e) {
+		std::cerr << "Incorect JSON: " << DATA_BASE_INFO_PATH << "\n";
+		return 0;
+	}
+	conn = PQsetdbLogin(host.c_str(), std::to_string(port).c_str(), 0, 0, dbname.c_str(), user.c_str(), password.c_str());
 	if (PQstatus(conn) != CONNECTION_OK) {
 		std::cerr << "Error in connection to server\n";
 		return 0;

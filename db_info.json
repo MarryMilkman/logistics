@@ -1,0 +1,7 @@
+{
+	"user": "postgres",
+	"password": "1234",
+	"host": "localhost",
+	"dbname": "polygons",
+	"port": 5432
+}
