@@ -2,46 +2,46 @@ cmake_minimum_required(VERSION 3.10.2)
 
 project(MyProject)
 
-#set(Boost_USE_RELEASE_LIBS ON)
+if (NOT WIN32)
 
-#set(Boost_USE_MULTITHREAD ON)
+	set(PostgreSQL_TYPE_INCLUDE_DIR "/usr/lib/postgresql/10/bin")
 
-set(PostgreSQL_TYPE_INCLUDE_DIR "/usr/lib/postgresql/10/bin")
+	find_package(Boost 1.65 REQUIRED)
 
+	link_directories( ${Boost_LIBRARY_DIRS})
+
+	include_directories(
+		${boost_INCLUDE_DIRS}
+	)
+
+else ()
+
+endif ()
+
+# PostgreSQL
 find_package(PostgreSQL REQUIRED)
 
 link_libraries(${PostgreSQL_LIBRARIES})
 
-# add_definitions(-DBOOST_ERROR_CODE_HEADER_ONLY)
-
-# set(BOOST_LIBRARY_DIR "/usr/lib/x86_64-linux-gnu/")
-
-find_package(Boost 1.65 REQUIRED)
-
-
-include_directories(
-	inc 
-	json/include 
-	${PostgreSQL_INCLUDE_DIRS}
-	${boost_INCLUDE_DIRS}
-)
-
- link_directories( ${Boost_LIBRARY_DIRS})
-
+#JSON
 set(JSON_BuildTests OFF CACHE INTERNAL "")
 
 add_subdirectory(json)
 
+
+include_directories(
+	inc
+	json/include
+	${PostgreSQL_INCLUDE_DIRS}
+)
+
 set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -lboost_thread -lboost_system -lpthread")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-# set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lboost_thread -lboost_system -lpthread")
-
-#-lws2_32
 
 set(SRC
 		src/main.cpp
-		src/LServer.cpp
+		# src/LServer.cpp
 		src/LogisticsController.cpp
 		src/Plast.cpp
 		src/ObjPolygon.cpp
@@ -55,10 +55,15 @@ set(SRC
 		src/split.cpp
 	)
 
-add_executable(log ${SRC})
+if (WIN32)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lws2_32")
+	set(SRC_SERVER src/server/LServer_winsock.cpp)
+else ()
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lboost_thread -lboost_system -lpthread")
+	set(SRC_SERVER src/server/LServer_boost_asio.cpp)
 
-add_executable(test_client trash/test_client.cpp)
+	add_executable(test_client trash/test_client.cpp)
+endif ()
 
 
-
-
+add_executable(log ${SRC} ${SRC_SERVER})

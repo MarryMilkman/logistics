@@ -259,6 +259,24 @@ PGconn							*LogisticsController::_connectTo_db() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // MARK: -  function for check Intersection check_polygon with ather arya in TetraTreePolygons
 // 1) checkIntersection (static)
 // 2) _intersectionPolygons (static)

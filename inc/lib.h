@@ -3,20 +3,21 @@
 
 
 #define DATA_BASE_INFO_PATH "../db_info.json"
-// #pragma warning(disable: 4996)
+ 
 
-// #include <WinSock2.h>
-// #include <WS2tcpip.h>
+# ifdef _WIN32
 
-// #pragma comment(lib, "Ws2_32.lib")
+#  pragma warning(disable: 4996)
+#  include <WinSock2.h>
+#  include <WS2tcpip.h>
+#  pragma comment(lib, "Ws2_32.lib")
 
-// #include <boost/bind.hpp>
-#include <boost/asio.hpp>
-// #include <boost/shared_ptr.hpp>
-// #include <boost/enable_shared_from_this.hpp>
+# else
+
+#  include <boost/asio.hpp>
 using namespace boost::asio;
-// using namespace boost::posix_time;
-// using boost::system::error_code;
+
+# endif
 
 
 #include <iostream>

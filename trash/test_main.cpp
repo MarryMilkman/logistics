@@ -1,4 +1,8 @@
 
+#include "lib.h"
+// #include "LServer.hpp"
+#include "LogisticsController.hpp"
+
 // #include <iostream>
 // #include <nlohmann/json.hpp>
 
@@ -9,99 +13,69 @@
 // }
 
 
-#include<iostream>
-using namespace std;
-#define sqr(x) x*x
-
-int main()
+int		main(int argc, char const **argv)
 {
- int y = 3;
- int z = sqr ( y++ );
- cout << y << " ";
- cout << z << " ";
- z = sqr ( y + 1 );
- cout << z << " ";
- return 0;
+
+	// test_geometry();
+	// exit(0);
+
+	LogisticsController	&controller = LogisticsController::getInstance();
+
+	controller.reloadPolygonsFrom_db();
+	// exit(0);
+	// controller.showSituationWithPolygons();
+
+	// work whith HTTP
+	// but now I wona work with standart input || file =)
+	JSON			json;
+	std::string		line;
+	std::ifstream	file;
+	bool			isP_line = true;
+
+	while (true) {
+		getline(std::cin, line);
+		if (line == "exit")
+			break ;
+		if (line[0] == 'g')
+			isP_line = false;
+		else
+			isP_line = true;
+		line = "../resources/" + line;
+		file.open(line);
+		if (!file.is_open()) {
+			std::cerr << "Can't find file " << line << "\n";
+			continue ;
+		}
+		file >> json;
+		if (isP_line) {
+			int					i = -1;
+			int					size = json.size();
+			// ResultController	result;
+
+			while (++i < size) {
+				controller.init_polyline(json[i]);
+				// result.addResult(controller.polyline, controller.status);
+			}
+			// std::cout << result.get_json() << "\n";
+		}
+		else {
+			int					i = -1;
+			int					size = json.size();
+			// ResultController	result;
+			
+			std::cerr << "Start addPolygon_to_controller_and_db\n";
+			while (++i < size) {
+				controller.addPolygon_to_controller_and_db(json[i]);
+				// result.addResult(controller.status)
+			}
+			// std::cout << result.get_json() << "\n";
+		}
+		std::cerr << controller.get_result().dump(2) << "\n\n";
+		file.close();
+	}
+
+	// if (JsonController::check)
+	//
+	return 0;
 }
 
-// #include "lib.h"
-
-// using json = nlohmann::json;
-
-// PGconn	*connect() {
-// 	// PgConnection::PgConnection("");
-
-
-// 	PGconn	*conn = 0;
-// 	std::string	user = "postgres";
-// 	std::string	password = "1234";
-// 	std::string	host = "localhost";
-// 	std::string	dbname = "postgres";
-// 	std::string	port = "5432";
-
-
-// 	conn = PQsetdbLogin(host.c_str(), port.c_str(), 0, 0, dbname.c_str(), user.c_str(), password.c_str());
-// 	// request = "user=" + user + " password="
-// 	// 		+ password + " host=" + host + " dbname=" + dbname;
-// 	// conn = PQconnectdb(request.c_str());
-// 	if (PQstatus(conn) != CONNECTION_OK) {
-// 		std::cerr << "Error in connection to server\n";
-// 		return 0;
-// 	}
-// 	std::cout << "Success!\n";
-// 	return conn;
-// }
-
-// int main()
-// {
-// 	PGconn	*conn = connect();
-// 	PGresult *res_;
-
-// 	if (!conn)
-// 		return 1;
-// 	PQsendQuery(conn, "SELECT * from sss;");
-// 	while (res_ = PQgetResult(conn) ) {
-// 		std::cout << "HAMMM\n";
-// 		int	nbr_rows = PQntuples(res_);
-// 		int	nbr_colons = PQnfields(res_);
-// 		int	i = 0;
-// 		while (i < nbr_rows) {
-// 			if (PQresultStatus(res_) == PGRES_TUPLES_OK && PQntuples(res_)) {
-//            		auto ID = PQgetvalue (res_ ,i, 0);
-//            		std::cout << ID << "\n";
-// 			}
-//          	if (PQresultStatus(res_) == PGRES_FATAL_ERROR)
-//             	std::cout<< PQresultErrorMessage(res_)<<std::endl;
-//             i++;
-//         }
-//         PQclear( res_ );
-//     }
-// 	return (0);
-// }
-
-// int main(int argc, char const *argv[])
-// {
-// 	std::ifstream file;
-
-// 	std::cerr << "AMMMMMM?\n";
-// 	file.open("../resources/polyline.txt");
-
-// 	if (file.is_open())
-// 		std::cerr << "Shalom file\n";
-// 	else
-// 		std::cerr << "Fail open file\n";
-//     // create a JSON object
-//     json j;
-//     file >> j;
-
-//     int		size;
-
-//     std::cout << j;
-
-// 	return 0;
-// }
-
-
-
-// DELETE FROM CUSTOMERS
-// WHERE ID = 6;
