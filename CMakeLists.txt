@@ -41,7 +41,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 set(SRC
 		src/main.cpp
-		# src/LServer.cpp
+		src/LTime.cpp
 		src/LogisticsController.cpp
 		src/Plast.cpp
 		src/ObjPolygon.cpp
