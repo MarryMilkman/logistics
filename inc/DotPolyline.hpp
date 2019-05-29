@@ -18,6 +18,7 @@ public:
 	int							id;
 	Dot							dot;
 	std::string					current_time;
+	time_t						sumTime;
 	bool						isIntersect;
 	
 	RelativePosition			position;
@@ -30,6 +31,8 @@ public:
 	double						distance;
 
 	void						initLocation(ObjPolygon *mostPossiblePolygon);
+
+	void						init_current_time();
 	
 	DotPolyline					&operator=(DotPolyline const &ref);
 

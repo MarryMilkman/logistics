@@ -3,7 +3,6 @@
 
 
 #define DATA_BASE_INFO_PATH "../db_info.json"
- 
 
 # ifdef _WIN32
 
@@ -19,7 +18,8 @@ using namespace boost::asio;
 
 # endif
 
-
+#include <stdio.h>
+#include <ctime>
 #include <iostream>
 #include <sstream>
 #include <vector>
@@ -34,7 +34,9 @@ using namespace boost::asio;
 
 using JSON = nlohmann::json;
 
-std::vector<std::string> split(std::string str);
+std::vector<std::string>	split(std::string str);
+
+// char						*strptime(const char * __restrict, const char * __restrict, struct tm * __restrict);
 
 enum	IntersectionType {
 	PolygonInclude = 0,

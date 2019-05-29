@@ -16,6 +16,9 @@ DotPolyline::DotPolyline() {
 	this->nextArea = 0;
 
 	this->distance = 0;
+
+	this->sumTime = 0;
+	this->id = 0;
 }
 
 DotPolyline::DotPolyline(Dot dot, std::string current_time) {
@@ -29,6 +32,9 @@ DotPolyline::DotPolyline(Dot dot, std::string current_time) {
 	this->nextArea = 0;
 
 	this->distance = 0;
+
+	this->sumTime = 0;
+	this->id = 0;
 }
 
 DotPolyline::DotPolyline(DotPolyline const & ref) {
@@ -48,6 +54,7 @@ DotPolyline		&DotPolyline::operator=(DotPolyline const & ref) {
 	this->currentArea = ref.currentArea;
 	this->previousArea = ref.previousArea;
 	this->nextArea = ref.nextArea;
+	this->sumTime = ref.sumTime;
 	this->id = ref.id;
 	return *this;
 }
@@ -152,3 +159,10 @@ RelativePosition	DotPolyline::_initLocation_tt_polygons(
 	return RelativePosition::Outside;
 }
 
+void			DotPolyline::init_current_time() {
+	int			size = 100;
+	char		buf[size];
+
+	strftime(buf, size, "%Y-%m-%dT%H:%M:%S.000Z", localtime(&this->sumTime));
+	this->current_time = buf;
+}

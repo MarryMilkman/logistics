@@ -2,6 +2,7 @@
 # define OBJ_POLYLINE_HPP
 
 # include "lib.h"
+# include "LTime.hpp"
 
 class DotPolyline;
 class TetraTreePolygons;
@@ -35,6 +36,10 @@ private:
 	void				_setLocationOf_poliline_dots();
 	void				_add_intersectionDots();
 	void				_add_timeAndDistance_for_intersectionDots();
+	void				_initTime_of_list(
+							DotPolyline *pDot1,
+							DotPolyline *pDot2, 
+							std::vector<DotPolyline*> list);
 
 	void				_add_list_intersect_dot_to_list_pDot_and_initLocate(
 							std::vector<Dot> &list_dot,

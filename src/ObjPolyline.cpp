@@ -70,7 +70,7 @@ void			ObjPolyline::analyze_and_update_data() {
 	this->_setLocationOf_poliline_dots();
 	this->_add_intersectionDots();
 	this->_add_timeAndDistance_for_intersectionDots();
-	this->showDots();
+	// this->showDots();
 }
 
 void			ObjPolyline::_setLocationOf_poliline_dots() {
@@ -145,6 +145,7 @@ void			ObjPolyline::_add_intersectionDots() {
 }
 
 void			ObjPolyline::_add_timeAndDistance_for_intersectionDots() {
+		// distance part
 	int		i = -1;
 	int		size = this->list_pDot.size();
 
@@ -155,8 +156,60 @@ void			ObjPolyline::_add_timeAndDistance_for_intersectionDots() {
 
 		pDot2->distance = Geometry::get_distance(line);
 	}
+		// time part
+	DotPolyline					*control_pDot1 = 0;
+	DotPolyline					*control_pDot2 = 0;
+	std::vector<DotPolyline*>	list_noTime_pDot;
+
+	for (DotPolyline *pDot : this->list_pDot) {
+		if (pDot->current_time != "unknown") {
+			if (!control_pDot1)
+				control_pDot1 = pDot;
+			else
+				control_pDot2 = pDot;
+		}
+		else
+			list_noTime_pDot.push_back(pDot);
+
+		if (control_pDot1 && control_pDot2) {
+			if (!list_noTime_pDot.empty()) {
+				this->_initTime_of_list(control_pDot1, control_pDot2, list_noTime_pDot);
+				list_noTime_pDot.clear();
+			}
+			control_pDot1 = control_pDot2;
+			control_pDot2 = 0;
+		}
+		
+	}
 }
 
+
+void			ObjPolyline::_initTime_of_list(
+					DotPolyline *pDot1,
+					DotPolyline *pDot2, 
+					std::vector<DotPolyline*> list)
+{
+	std::string	format(TIME_FORMAT);
+	int		s_time1 = LTime::get_unix_second(pDot1->current_time, format.c_str());
+	int		s_time2 = LTime::get_unix_second(pDot2->current_time, format.c_str());
+	int		sum_sec;
+	double	distance;
+	double	speed;
+	Line	control_line(pDot1->dot, pDot2->dot);
+
+	pDot1->sumTime = s_time1;
+	pDot2->sumTime = s_time2;
+	sum_sec = s_time2 - s_time1;
+	distance = Geometry::get_distance(control_line);
+	speed = distance/sum_sec;
+
+	for (DotPolyline *pDot : list) {
+		distance = pDot->distance;
+		pDot->sumTime = distance/speed + s_time1;
+		s_time1 = pDot->sumTime;
+		pDot->init_current_time();
+	}
+}
 
 
 
@@ -254,12 +307,9 @@ std::vector<Plast *>		ObjPolyline::_find_intersect(
 			check_polygon->plast->_tt_polygons->polygon) {
 		r_list_plast.push_back(check_polygon->plast);
 	}
-	std::cerr << "Line: \n" << line.dot1.x << ":" << line.dot1.y
-				<< ", " << line.dot2.x << ":" << line.dot2.y << "\n";
 	new_list_intersectDots = Geometry::getDotIntersect(line, check_polygon);
 	for (Dot dot : new_list_intersectDots) {
 		is_exist = false;
-		std::cerr << "Dot: " << dot.x << " : " << dot.y << "\n";
 		for (Dot check_dot : r_list) {
 			if (check_dot == dot) {
 				is_exist = true;
