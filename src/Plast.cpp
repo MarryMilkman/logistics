@@ -37,7 +37,6 @@ std::vector<ObjPolygon *>	Plast::addNewPolygon_toPlast(
 	if (answer == IntersectionType::PolygonInclude)
 		answer = IntersectionType::Intersection_false;
 	answer_FromCheckIntersection_polygons = LogisticsController::checkIntersection(polygon, this->_tt_polygons, &answer);
-	std::cerr << "Answer: " << answer << "\n";
 	if (answer == IntersectionType::Intersection_false) {
 		this->_tt_polygons->addNewPolygon(polygon);
 		this->_update_max_min_coord(polygon);
@@ -66,15 +65,9 @@ std::vector<ObjPolygon *>	Plast::addNewPolygon_toPlast(
 		return std::vector<ObjPolygon *>();
 	}
 	if (answer == IntersectionType::Intersection_true) {
-		std::cerr << "Intersection polygons " << polygon->data.id << " and |";
-		for (ObjPolygon *polygon_intersect : answer_FromCheckIntersection_polygons)
-			std::cerr << polygon_intersect->data.id << "| ";
-		std::cerr << "\n";
 		return answer_FromCheckIntersection_polygons;
 	}
 	if (answer == IntersectionType::FullMatch) {
-		std::cerr << "Full macth polygons " << polygon->data.id << " and "
-					<< answer_FromCheckIntersection_polygons[0]->data.id << "\n"; 
 		return answer_FromCheckIntersection_polygons;
 	}
 	return std::vector<ObjPolygon *>();

@@ -13,21 +13,9 @@ time_t		LTime::get_unix_second(std::string str, const char *format) {
 				&tm.tm_hour,
 				&tm.tm_min,
 				&tm.tm_sec);
-
-	std::cerr << tm.tm_year << "\n";
-	std::cerr << tm.tm_mon << "\n";
-	std::cerr << tm.tm_mday << "\n";
-	std::cerr << tm.tm_hour << "\n";
-	std::cerr << tm.tm_min << "\n";
-	std::cerr << tm.tm_sec << "\n";
-
-	// tm.tm_hour -= 1;
 	tm.tm_year -= 1900;
     tm.tm_mon -= 1;
     tm.tm_isdst = 0;
-
 	ts = mktime(&tm);
-
-	std::cerr << (int)ts << "\n\n";
 	return ts;
 }

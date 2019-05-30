@@ -73,6 +73,68 @@ void			TetraTreePolygons::addNewPolygon(ObjPolygon *polygon) {
 	}
 }
 
+void			TetraTreePolygons::addNew_tt_polygons(TetraTreePolygons *tt_polygons) {
+	if (!tt_polygons || !tt_polygons->polygon || !this->polygon)
+		return ;
+
+	ObjPolygon				*polygon = tt_polygons->polygon;
+	double					polygonX = polygon->data.center.x;
+	double					polygonY = polygon->data.center.y;
+	double					currentX = this->polygon->data.center.x;
+	double					currentY = this->polygon->data.center.y;
+
+	if (polygonX > currentX && polygonY <= currentY) {
+		if (this->moreX_lessY)
+			this->moreX_lessY->addNew_tt_polygons(tt_polygons);
+		else
+			this->moreX_lessY = tt_polygons;
+		return ;
+	}
+	else if (polygonX >= currentX && polygonY > currentY) {
+		if (this->moreX_moreY)
+			this->moreX_moreY->addNew_tt_polygons(tt_polygons);
+		else
+			this->moreX_moreY = tt_polygons;
+		return ;
+	}
+	else if (polygonX < currentX && polygonY >= currentY) {
+		if (this->lessX_moreY)
+			this->lessX_moreY->addNew_tt_polygons(tt_polygons);
+		else
+			this->lessX_moreY = tt_polygons;
+		return ;
+	}
+	else if (polygonX <= currentX && polygonY < currentY) {
+		if (this->lessX_lessY)
+			this->lessX_lessY->addNew_tt_polygons(tt_polygons);
+		else
+			this->lessX_lessY = tt_polygons;
+		return ;
+	}
+	else {
+		if (this->moreX_moreY)
+			this->moreX_moreY->addNew_tt_polygons(tt_polygons);
+		else
+			this->moreX_moreY = tt_polygons;
+		return ;
+	}
+}
+
+void			TetraTreePolygons::updateParent(ObjPolygon *parent) {
+	if (!this || !this->polygon)
+		return ;
+	this->polygon->parent = parent;
+	if (this->moreX_lessY)
+		this->moreX_lessY->updateParent(parent);
+	if (this->moreX_moreY)
+		this->moreX_moreY->updateParent(parent);
+	if (this->lessX_moreY)
+		this->lessX_moreY->updateParent(parent);
+	if (this->lessX_lessY)
+		this->lessX_lessY->updateParent(parent);
+}
+
+
 
 
 
@@ -104,7 +166,7 @@ void							TetraTreePolygons::setUpdate_tt_polygons_without(
 											polygons, new_tt_polygons);
 }
 
-	// check existence ObjPolygon* is std::vector<ObjPolygon *>
+	// check existence ObjPolygon* in std::vector<ObjPolygon *>
 bool								TetraTreePolygons::is_existence(
 										ObjPolygon *check_polygon, 
 										std::vector<ObjPolygon *> polygons)

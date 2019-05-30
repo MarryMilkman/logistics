@@ -24,6 +24,7 @@ public:
 									ObjPolygon *polygon,
 									ObjPolygon *parentPolygon,
 									IntersectionType & answer);
+	
 	static Plast				*getPlast(ObjPolygon *polygon);
 
 	static Plast				*getOveralPlast(ObjPolygon *p1, ObjPolygon *p2);

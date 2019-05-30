@@ -29,21 +29,22 @@ public:
 											TetraTreePolygons *check_tt_polygon,
 											IntersectionType *answer);
 
-	void								deletePolygonFrom_db(int id);
+	void								deletePolygonFrom_db(std::string id);
 
-	void								showSituationWithPolygons(std::vector<Plast *> list_plast);
 	Plast								*get_plast();
 	ResultStatus						get_status();
 	JSON								get_result();
 
-	std::vector<ObjPolygon *>			all_polygons;
+	
 
 private:
-	JSON				_result;
-	ObjPolyline			*_polyline;
-	Plast				*_plast;
-	ResultStatus		_status;
+	JSON						_result;
+	ObjPolyline					*_polyline;
+	Plast						*_plast;
+	ResultStatus				_status;
+	std::vector<ObjPolygon *>	_all_polygons;
 
+	void						_addPolygonTo_controller(std::vector<ObjPolygon *> parts_of_one_area);
 	std::vector<ObjPolygon *>	_getPolygon_from_db_PGresult(PGresult *res, int i);
 	void						_addPolygonTo_db(JSON &json, ObjPolygon *polygon);
 	std::vector<ObjPolygon *>	_getPolygonIntoJSON(JSON &json_polygon);
@@ -69,8 +70,12 @@ private:
 	std::string					_createNewSQL_forAddPolygonInto_db(
 									JSON &json,
 									ObjPolygon *polygon);
+	bool						_checkExistPolygon(std::string id);
 
 
+
+	std::vector<ObjPolygon *>			_delete_from_controller_and_return_polygon(
+											ObjPolygon	*exist_polygon);
 
 	static std::vector<ObjPolygon *>	_joinList(
 											std::vector<ObjPolygon *> list_p1,
@@ -80,6 +85,11 @@ private:
 	void								_add_max_min_center_XY_toPolygonData(
 											std::vector<Dot> &arr_dot,
 											t_polygon_data &data);
+	void								_showSituationWithPolygons(std::vector<Plast *> list_plast);
+	ObjPolygon							*_getPolygon_by_id(std::string id);
+	void								_delete_from_all_polygons_by_id(std::string id);
+	void								_add_to_all_polygons(ObjPolygon *polygon);
+
 };
 
 #endif

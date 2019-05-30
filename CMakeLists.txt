@@ -42,12 +42,17 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 set(SRC
 		src/main.cpp
 		src/LTime.cpp
-		src/LogisticsController.cpp
+		
+		src/LogisticsController/LogisticsController.cpp
+		src/LogisticsController/LogisticsController_data.cpp
+		src/LogisticsController/LogisticsController_logics.cpp
+
 		src/Plast.cpp
 		src/ObjPolygon.cpp
 		src/ObjPolyline.cpp
 		src/DotPolyline.cpp
 		src/TetraTreePolygons.cpp
+
 		src/geometry/Dot.cpp
 		src/geometry/Geometry.cpp
 		src/geometry/Line.cpp

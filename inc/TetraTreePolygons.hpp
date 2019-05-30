@@ -23,10 +23,15 @@ public:
 	ObjPolygon				*polygon;
 
 	void					addNewPolygon(ObjPolygon *polygon);
+	void					addNew_tt_polygons(TetraTreePolygons *tt_polygons);
+
+	void					updateParent(ObjPolygon *parent);
+
 	void					deleteBranches();
 	void					deleteBranches_and_polygon();
 
 	//static functions
+
 
 	static void								setUpdate_tt_polygons_without(
 												TetraTreePolygons *old_tt_polygons,
